@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Plus, Eye, Edit, Pause, Play, Download } from 'lucide-react';
+import { Search, Filter, Plus, Eye, Edit, Pause, Play, Download, User } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
@@ -286,7 +286,7 @@ export default function PatientsPage() {
               <Card>
                 <CardContent className="p-12 text-center">
                   <div className="text-gray-400 mb-4">
-                    <Users className="h-12 w-12 mx-auto" />
+                    <User className="h-12 w-12 mx-auto" />
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No patients found</h3>
                   <p className="text-gray-500 mb-4">
