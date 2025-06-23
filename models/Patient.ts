@@ -28,6 +28,7 @@ export interface IPatient extends Document {
   status: 'active' | 'paused' | 'completed';
   avatar?: string;
   notes?: string;
+  prescriptionImages: string[]; // Array of image file paths
   lastReminderSent?: Date;
   nextReminderDue?: Date;
   createdBy: mongoose.Types.ObjectId;
@@ -126,6 +127,10 @@ const PatientSchema: Schema = new Schema({
     type: String,
     trim: true,
   },
+  prescriptionImages: [{
+    type: String,
+    trim: true,
+  }],
   lastReminderSent: {
     type: Date,
   },
