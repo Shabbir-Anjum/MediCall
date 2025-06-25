@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { DivideIcon as LucideIcon } from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface StatsCardProps {
@@ -9,7 +9,7 @@ interface StatsCardProps {
   value: string | number;
   change?: string;
   changeType?: 'positive' | 'negative' | 'neutral';
-  icon: typeof LucideIcon;
+  icon: LucideIcon;
   color: 'blue' | 'green' | 'yellow' | 'red' | 'purple';
   index: number;
 }
