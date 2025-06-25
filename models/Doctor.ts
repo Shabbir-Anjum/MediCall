@@ -20,6 +20,8 @@ export interface IDoctor extends Document {
   consultationFee?: number;
   experience: number;
   qualifications: string[];
+  voiceId?: string; // ElevenLabs voice ID
+  voiceCloneStatus?: 'pending' | 'completed' | 'failed';
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -94,6 +96,14 @@ const DoctorSchema: Schema = new Schema({
     type: String,
     trim: true,
   }],
+  voiceId: {
+    type: String,
+    trim: true,
+  },
+  voiceCloneStatus: {
+    type: String,
+    enum: ['pending', 'completed', 'failed'],
+  },
   isActive: {
     type: Boolean,
     default: true,

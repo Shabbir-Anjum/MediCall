@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Plus, Eye, Edit, Calendar, Phone, Mail } from 'lucide-react';
+import { Search, Filter, Plus, Eye, Edit, Calendar, Phone, Mail, Mic } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
+import VoiceCloneModal from '@/components/doctors/VoiceCloneModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,9 +18,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
 interface Doctor {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   phoneNumber: string;
@@ -29,14 +31,26 @@ interface Doctor {
   avatar?: string;
   experience: number;
   consultationFee?: number;
+  voiceId?: string;
+  voiceCloneStatus?: 'pending' | 'completed' | 'failed';
 }
 
 export default function DoctorsPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [specialtyFilter, setSpecialtyFilter] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [voiceCloneModal, setVoiceCloneModal] = useState<{
+    isOpen: boolean;
+    doctorId: string;
+    doctorName: string;
+  }>({
+    isOpen: false,
+    doctorId: '',
+    doctorName: '',
+  });
 
   const [user] = useState({
     name: 'Sarah Johnson',
@@ -45,63 +59,84 @@ export default function DoctorsPage() {
     avatar: 'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150',
   });
 
-  // Mock data - replace with API call
+  // Fetch doctors from API
   useEffect(() => {
-    const mockDoctors: Doctor[] = [
-      {
-        id: '1',
-        name: 'Dr. Emily Wilson',
-        email: 'emily.wilson@hospital.com',
-        phoneNumber: '+1 (555) 111-2222',
-        specialty: 'Cardiology',
-        department: 'Cardiology',
-        availabilityStatus: 'online',
-        avatar: 'https://images.pexels.com/photos/5452293/pexels-photo-5452293.jpeg?auto=compress&cs=tinysrgb&w=150',
-        experience: 12,
-        consultationFee: 200,
-      },
-      {
-        id: '2',
-        name: 'Dr. Michael Chen',
-        email: 'michael.chen@hospital.com',
-        phoneNumber: '+1 (555) 222-3333',
-        specialty: 'Neurology',
-        department: 'Neurology',
-        availabilityStatus: 'online',
-        avatar: 'https://images.pexels.com/photos/6129967/pexels-photo-6129967.jpeg?auto=compress&cs=tinysrgb&w=150',
-        experience: 8,
-        consultationFee: 250,
-      },
-      {
-        id: '3',
-        name: 'Dr. Sarah Davis',
-        email: 'sarah.davis@hospital.com',
-        phoneNumber: '+1 (555) 333-4444',
-        specialty: 'Pediatrics',
-        department: 'Pediatrics',
-        availabilityStatus: 'offline',
-        avatar: 'https://images.pexels.com/photos/5452201/pexels-photo-5452201.jpeg?auto=compress&cs=tinysrgb&w=150',
-        experience: 15,
-        consultationFee: 180,
-      },
-      {
-        id: '4',
-        name: 'Dr. James Rodriguez',
-        email: 'james.rodriguez@hospital.com',
-        phoneNumber: '+1 (555) 444-5555',
-        specialty: 'Orthopedics',
-        department: 'Orthopedics',
-        availabilityStatus: 'on-leave',
-        experience: 20,
-        consultationFee: 300,
-      },
-    ];
+    const fetchDoctors = async () => {
+      try {
+        const response = await fetch('/api/doctors');
+        const data = await response.json();
+        
+        if (response.ok) {
+          setDoctors(data.doctors || []);
+        } else {
+          throw new Error(data.error || 'Failed to fetch doctors');
+        }
+      } catch (error) {
+        console.error('Error fetching doctors:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load doctors. Using sample data.',
+          variant: 'destructive',
+        });
+        
+        // Fallback to mock data
+        const mockDoctors: Doctor[] = [
+          {
+            _id: '1',
+            name: 'Dr. Emily Wilson',
+            email: 'emily.wilson@hospital.com',
+            phoneNumber: '+1 (555) 111-2222',
+            specialty: 'Cardiology',
+            department: 'Cardiology',
+            availabilityStatus: 'online',
+            avatar: 'https://images.pexels.com/photos/5452293/pexels-photo-5452293.jpeg?auto=compress&cs=tinysrgb&w=150',
+            experience: 12,
+            consultationFee: 200,
+          },
+          {
+            _id: '2',
+            name: 'Dr. Michael Chen',
+            email: 'michael.chen@hospital.com',
+            phoneNumber: '+1 (555) 222-3333',
+            specialty: 'Neurology',
+            department: 'Neurology',
+            availabilityStatus: 'online',
+            avatar: 'https://images.pexels.com/photos/6129967/pexels-photo-6129967.jpeg?auto=compress&cs=tinysrgb&w=150',
+            experience: 8,
+            consultationFee: 250,
+          },
+          {
+            _id: '3',
+            name: 'Dr. Sarah Davis',
+            email: 'sarah.davis@hospital.com',
+            phoneNumber: '+1 (555) 333-4444',
+            specialty: 'Pediatrics',
+            department: 'Pediatrics',
+            availabilityStatus: 'offline',
+            avatar: 'https://images.pexels.com/photos/5452201/pexels-photo-5452201.jpeg?auto=compress&cs=tinysrgb&w=150',
+            experience: 15,
+            consultationFee: 180,
+          },
+          {
+            _id: '4',
+            name: 'Dr. James Rodriguez',
+            email: 'james.rodriguez@hospital.com',
+            phoneNumber: '+1 (555) 444-5555',
+            specialty: 'Orthopedics',
+            department: 'Orthopedics',
+            availabilityStatus: 'on-leave',
+            experience: 20,
+            consultationFee: 300,
+          },
+        ];
+        setDoctors(mockDoctors);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    setTimeout(() => {
-      setDoctors(mockDoctors);
-      setIsLoading(false);
-    }, 1000);
-  }, []);
+    fetchDoctors();
+  }, [toast]);
 
   const filteredDoctors = doctors.filter(doctor => {
     const matchesSearch = doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -126,6 +161,32 @@ export default function DoctorsPage() {
       case 'on-leave': return 'On Leave';
       default: return status;
     }
+  };
+
+  const getVoiceStatusColor = (status?: string) => {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'failed': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const handleVoiceClone = (doctorId: string, doctorName: string) => {
+    setVoiceCloneModal({
+      isOpen: true,
+      doctorId,
+      doctorName,
+    });
+  };
+
+  const handleVoiceCloneSuccess = (voiceId: string) => {
+    // Update the doctor in the local state
+    setDoctors(prev => prev.map(doctor => 
+      doctor._id === voiceCloneModal.doctorId 
+        ? { ...doctor, voiceId, voiceCloneStatus: 'completed' as const }
+        : doctor
+    ));
   };
 
   const specialties = [...new Set(doctors.map(doctor => doctor.specialty))];
@@ -219,7 +280,7 @@ export default function DoctorsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredDoctors.map((doctor, index) => (
                   <motion.div
-                    key={doctor.id}
+                    key={doctor._id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -266,6 +327,15 @@ export default function DoctorsPage() {
                           )}
                         </div>
 
+                        {/* Voice Clone Status */}
+                        {doctor.voiceCloneStatus && (
+                          <div className="mb-4">
+                            <Badge className={getVoiceStatusColor(doctor.voiceCloneStatus)}>
+                              Voice: {doctor.voiceCloneStatus}
+                            </Badge>
+                          </div>
+                        )}
+
                         <div className="flex space-x-2">
                           <Button size="sm" variant="outline" className="flex-1">
                             <Eye className="h-3 w-3 mr-1" />
@@ -274,6 +344,14 @@ export default function DoctorsPage() {
                           <Button size="sm" variant="outline" className="flex-1">
                             <Edit className="h-3 w-3 mr-1" />
                             Edit
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleVoiceClone(doctor._id, doctor.name)}
+                            title="Clone Voice"
+                          >
+                            <Mic className="h-3 w-3" />
                           </Button>
                           <Button size="sm" variant="outline">
                             <Calendar className="h-3 w-3" />
@@ -309,6 +387,15 @@ export default function DoctorsPage() {
           </motion.div>
         </main>
       </div>
+
+      {/* Voice Clone Modal */}
+      <VoiceCloneModal
+        isOpen={voiceCloneModal.isOpen}
+        onClose={() => setVoiceCloneModal(prev => ({ ...prev, isOpen: false }))}
+        doctorId={voiceCloneModal.doctorId}
+        doctorName={voiceCloneModal.doctorName}
+        onSuccess={handleVoiceCloneSuccess}
+      />
     </div>
   );
 }
