@@ -51,7 +51,7 @@ export default function HomePage() {
                 <p className="text-sm text-gray-500">Hospital Call Center System</p>
               </div>
             </div>
-            <Button 
+            <Button
               onClick={() => router.push('/auth/login')}
               className="bg-blue-600 hover:bg-blue-700"
             >
@@ -74,12 +74,12 @@ export default function HomePage() {
             <span className="block text-blue-600">Call Center Operations</span>
           </h2>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Automate patient reminders, manage appointments, and track call outcomes 
+            Automate patient reminders, manage appointments, and track call outcomes
             with our comprehensive call center management system powered by AI.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               onClick={() => router.push('/auth/login')}
               className="bg-blue-600 hover:bg-blue-700 px-8 py-3"
             >
@@ -129,8 +129,8 @@ export default function HomePage() {
           <p className="text-blue-100 mb-8 text-lg">
             Join hundreds of healthcare facilities already using MediCall to improve patient care.
           </p>
-          <Button 
-            size="lg" 
+          <Button
+            size="lg"
             variant="secondary"
             onClick={() => router.push('/auth/login')}
             className="bg-white text-blue-600 hover:bg-gray-50 px-8 py-3"

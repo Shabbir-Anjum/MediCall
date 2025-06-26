@@ -1,0 +1,569 @@
+# MediCall - Hospital Call Center Management System - Cursor Rules
+
+## Environment & Package Manager
+
+- **OS**: Linux (Ubuntu 24.04)
+- **Package Manager**: Bun
+- **Node.js Framework**: Next.js 13+ (App Router)
+- **Database**: MongoDB with Mongoose ODM
+- **AI Integration**: Bland.ai for voice calls and SMS
+
+## Core Dependencies
+
+- Shadcn UI components (primary UI library)
+- Lucide React (icon library)
+- Zod (type validation)
+- Mongoose (MongoDB ODM)
+- NextAuth.js (authentication)
+- Bland.ai (AI voice calls and SMS)
+- Framer Motion (animations)
+- Recharts (analytics)
+
+## Project Architecture
+
+### Folder Structure
+
+```text
+MediCall/
+├── app/                    # Next.js App Router pages
+│   ├── api/               # API routes
+│   │   ├── patients/      # Patient management APIs
+│   │   ├── doctors/       # Doctor management APIs
+│   │   ├── bookings/      # Appointment APIs
+│   │   ├── call-logs/     # Call tracking APIs
+│   │   ├── bland-ai/      # AI integration APIs
+│   │   └── upload/        # File upload APIs
+│   ├── auth/              # Authentication pages
+│   ├── dashboard/         # Main dashboard
+│   ├── patients/          # Patient management pages
+│   ├── doctors/           # Doctor management pages
+│   ├── bookings/          # Appointment pages
+│   ├── calls/             # Call history pages
+│   └── settings/          # System settings
+├── components/            # Global reusable components
+│   ├── ui/               # Shadcn UI components
+│   ├── layout/           # Layout components (Header, Sidebar)
+│   └── dashboard/        # Dashboard-specific components
+├── models/               # MongoDB/Mongoose models
+├── lib/                  # Utilities, configs, external services
+├── hooks/                # Custom React hooks
+└── types/                # TypeScript type definitions
+```
+
+### Database Models Structure
+
+The system uses 5 main MongoDB collections:
+
+1. **Patient** - Patient records with medications and preferences
+2. **Doctor** - Doctor profiles with availability and voice IDs
+3. **Booking** - Appointment scheduling data
+4. **CallLog** - Call history and outcomes
+5. **User** - Agent accounts and authentication
+
+## Development Rules
+
+### 1. Command Usage (Linux Terminal)
+
+Always use Linux-compatible commands:
+
+```bash
+# Package management
+bun add [package-name]
+bun remove [package-name]
+bun dev
+bun build
+
+# File operations
+mkdir -p app/patients/register
+cp components/ui/button.tsx components/patients/
+```
+
+### 2. Server vs Client Components
+
+- **Default**: All components are SERVER-SIDE unless explicitly needed client-side
+- **Client-side only when**: Interactive state, event handlers, browser APIs, form handling
+- **Mark client components**: Use `"use client"` directive
+
+### 3. Page Implementation Pattern
+
+#### Example: Patients Page
+
+```typescript
+// app/patients/page.tsx (SERVER COMPONENT)
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { PatientsView } from '@/components/patients/PatientsView';
+import { validateAuth } from '@/lib/auth';
+import { fetchPatients } from '@/lib/api/patients';
+
+export default async function PatientsPage() {
+  // 1. Server-side authentication
+  const cookieStore = cookies();
+  const authToken = cookieStore.get('auth-token')?.value;
+
+  if (!authToken || !await validateAuth(authToken)) {
+    redirect('/auth/login');
+  }
+
+  // 2. Data fetching
+  const patients = await fetchPatients(authToken);
+
+  // 3. View rendering
+  return <PatientsView patients={patients} />;
+}
+```
+
+### 4. MongoDB/Mongoose Integration
+
+#### Model Definition Pattern
+
+```typescript
+// models/Patient.ts
+import mongoose, { Document, Schema } from 'mongoose';
+
+export interface IPatient extends Document {
+  name: string;
+  email: string;
+  mobileNumber: string;
+  medications: IMedication[];
+  reminderPreferences: {
+    sms: boolean;
+    voiceCall: boolean;
+    email: boolean;
+  };
+  status: 'active' | 'paused' | 'completed';
+  createdBy: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const PatientSchema: Schema = new Schema({
+  name: {
+    type: String,
+    required: [true, 'Patient name is required'],
+    trim: true,
+  },
+  email: {
+    type: String,
+    required: [true, 'Email is required'],
+    lowercase: true,
+    trim: true,
+  },
+  mobileNumber: {
+    type: String,
+    required: [true, 'Mobile number is required'],
+    trim: true,
+  },
+  medications: [{
+    name: { type: String, required: true, trim: true },
+    dosage: { type: String, required: true, trim: true },
+    times: [{ type: String, required: true }],
+    notes: { type: String, trim: true },
+  }],
+  reminderPreferences: {
+    sms: { type: Boolean, default: true },
+    voiceCall: { type: Boolean, default: true },
+    email: { type: Boolean, default: false },
+  },
+  status: {
+    type: String,
+    enum: ['active', 'paused', 'completed'],
+    default: 'active',
+  },
+  createdBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+}, {
+  timestamps: true,
+});
+
+export default mongoose.models.Patient || mongoose.model<IPatient>('Patient', PatientSchema);
+```
+
+#### API Route Pattern
+
+```typescript
+// app/api/patients/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import dbConnect from '@/lib/mongodb';
+import Patient from '@/models/Patient';
+
+export async function GET(request: NextRequest) {
+  try {
+    await dbConnect();
+
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
+    const search = searchParams.get('search');
+
+    let query: any = {};
+
+    if (status && status !== 'all') {
+      query.status = status;
+    }
+
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const patients = await Patient.find(query)
+      .populate('createdBy', 'name email')
+      .sort({ createdAt: -1 });
+
+    return NextResponse.json({ patients });
+  } catch (error) {
+    console.error('Error fetching patients:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch patients' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    await dbConnect();
+
+    const body = await request.json();
+
+    // In a real app, you'd get the user ID from the session
+    const createdBy = '507f1f77bcf86cd799439011'; // Mock user ID
+
+    const patient = new Patient({
+      ...body,
+      createdBy,
+    });
+
+    await patient.save();
+
+    return NextResponse.json({ patient }, { status: 201 });
+  } catch (error) {
+    console.error('Error creating patient:', error);
+    return NextResponse.json(
+      { error: 'Failed to create patient' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+### 5. Bland.ai Integration
+
+#### AI Service Configuration
+
+```typescript
+// lib/bland-ai.ts
+class BlandAiService {
+  private config: BlandAiConfig;
+
+  constructor() {
+    this.config = {
+      apiKey: process.env.BLANDAI_API_KEY || '',
+      baseUrl: 'https://api.bland.ai/v1',
+    };
+  }
+
+  async makeCall(phoneNumber: string, script: string, patientName: string) {
+    try {
+      const response = await fetch(`${this.config.baseUrl}/calls`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.config.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phone_number: phoneNumber,
+          task: script,
+          voice: 'nat',
+          reduce_latency: true,
+          webhook: `${process.env.NEXTAUTH_URL}/api/bland-ai/webhook`,
+          metadata: {
+            patient_name: patientName,
+            call_type: 'reminder',
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Bland AI API error: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error making call with Bland AI:', error);
+      throw error;
+    }
+  }
+
+  generateMedicationReminderScript(patientName: string, medicationName: string, dosage: string) {
+    return `Hello ${patientName}, this is a friendly reminder from your healthcare provider.
+    It's time to take your ${medicationName} medication, ${dosage}.
+    Please take your medication as prescribed by your doctor.
+    If you have any questions or concerns, please contact your healthcare provider.
+    If this is an emergency, please hang up and dial 911 immediately.
+    Thank you and have a great day!`;
+  }
+}
+
+export const blandAiService = new BlandAiService();
+```
+
+### 6. Type Definitions with Zod
+
+#### Patient Types
+
+```typescript
+// types/patient.ts
+import { z } from 'zod';
+
+export const MedicationSchema = z.object({
+  name: z.string().min(1, 'Medication name is required'),
+  dosage: z.string().min(1, 'Dosage is required'),
+  times: z.array(z.string()).min(1, 'At least one time is required'),
+  notes: z.string().optional(),
+});
+
+export const PatientSchema = z.object({
+  name: z.string().min(1, 'Patient name is required'),
+  email: z.string().email('Invalid email address'),
+  mobileNumber: z.string().min(10, 'Valid mobile number is required'),
+  parentGuardianNumber: z.string().optional(),
+  dateOfBirth: z.date().optional(),
+  address: z.string().optional(),
+  emergencyContact: z.object({
+    name: z.string(),
+    relationship: z.string(),
+    phoneNumber: z.string(),
+  }).optional(),
+  medications: z.array(MedicationSchema),
+  reminderPreferences: z.object({
+    sms: z.boolean(),
+    voiceCall: z.boolean(),
+    email: z.boolean(),
+  }),
+  status: z.enum(['active', 'paused', 'completed']).default('active'),
+  notes: z.string().optional(),
+});
+
+export type Patient = z.infer<typeof PatientSchema>;
+export type CreatePatientData = z.infer<typeof PatientSchema>;
+```
+
+### 7. Environment Variables
+
+#### Required Environment Variables
+
+```bash
+# MongoDB
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/medicall?retryWrites=true&w=majority
+DATABASE_NAME=medicall
+
+# Bland.ai
+BLANDAI_API_KEY=your_blandai_api_key_here
+
+# NextAuth.js
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your_nextauth_secret_here
+
+# SMTP (Optional - for email notifications)
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your_smtp_username
+SMTP_PASS=your_smtp_password
+```
+
+### 8. Component Organization Rules
+
+#### Global Components (components/)
+
+- **ui/**: Shadcn UI components
+- **layout/**: Header, Sidebar, Footer
+- **dashboard/**: Dashboard-specific components (StatsCard, etc.)
+
+#### Page-Specific Components
+
+- **components/patients/**: Patient management components
+- **components/doctors/**: Doctor management components
+- **components/bookings/**: Appointment components
+- **components/calls/**: Call history components
+
+### 9. Webhook Handling
+
+#### Bland.ai Webhook
+
+```typescript
+// app/api/bland-ai/webhook/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import dbConnect from '@/lib/mongodb';
+import CallLog from '@/models/CallLog';
+
+export async function POST(request: NextRequest) {
+  try {
+    await dbConnect();
+
+    const body = await request.json();
+
+    const {
+      call_id,
+      status,
+      transcript,
+      duration,
+      metadata,
+    } = body;
+
+    // Find existing call log or create new one
+    let callLog = await CallLog.findOne({ blandAiCallId: call_id });
+
+    if (callLog) {
+      // Update existing call log
+      callLog.transcript = transcript;
+      callLog.duration = duration;
+
+      if (status === 'completed') {
+        callLog.outcome = 'completed';
+      } else if (status === 'no-answer') {
+        callLog.outcome = 'no-answer';
+      } else if (status === 'busy') {
+        callLog.outcome = 'busy';
+      }
+
+      await callLog.save();
+    }
+
+    return NextResponse.json({ message: 'Webhook processed successfully' });
+  } catch (error) {
+    console.error('Error processing Bland.ai webhook:', error);
+    return NextResponse.json(
+      { error: 'Failed to process webhook' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+## Development Workflow
+
+1. **Define Types First**: Create Zod schemas in `types/`
+2. **Build Models**: Create Mongoose models in `models/`
+3. **Create API Routes**: Build Next.js API routes in `app/api/`
+4. **Build Pages**: Create server components in `app/`
+5. **Add Components**: Create reusable components in `components/`
+6. **Add Client Interactivity**: Mark only necessary components as `"use client"`
+7. **Test & Validate**: Ensure types are validated with Zod schemas
+
+## Security Guidelines
+
+- ✅ Use NextAuth.js for secure authentication
+- ✅ Validate all API inputs with Zod
+- ✅ Implement role-based access control
+- ✅ Use HTTP-only cookies for sensitive data
+- ✅ Sanitize user inputs
+- ❌ Never store sensitive data in localStorage
+- ❌ Don't expose API keys in client components
+- ❌ Avoid bypassing TypeScript with `any`
+
+## Performance Guidelines
+
+- ✅ Maximize server-side rendering
+- ✅ Use React.Suspense for loading states
+- ✅ Implement proper MongoDB indexing
+- ✅ Optimize images with Next.js Image component
+- ✅ Use pagination for large datasets
+- ❌ Don't overuse client components
+- ❌ Avoid unnecessary re-renders
+- ❌ Don't fetch data in client components when server-side is possible
+
+## Quick Reference Commands
+
+### Project Setup
+
+```bash
+# Install dependencies
+bun install
+
+# Run development server
+bun dev
+
+# Build for production
+bun build
+
+# Start production server
+bun start
+```
+
+### Shadcn UI Commands
+
+```bash
+# Initialize Shadcn UI
+bunx shadcn-ui@latest init
+
+# Add components
+bunx shadcn-ui@latest add button
+bunx shadcn-ui@latest add input
+bunx shadcn-ui@latest add form
+bunx shadcn-ui@latest add table
+bunx shadcn-ui@latest add card
+bunx shadcn-ui@latest add dialog
+```
+
+### File Creation Templates
+
+```bash
+# Create new API route
+mkdir -p app/api/[route-name]
+touch app/api/[route-name]/route.ts
+
+# Create new page
+mkdir -p app/[page-name]
+touch app/[page-name]/page.tsx
+
+# Create new component
+mkdir -p components/[component-name]
+touch components/[component-name]/index.tsx
+```
+
+## Hospital-Specific Patterns
+
+### Medication Reminder Workflow
+
+1. **Patient Registration**: Collect medication schedule and preferences
+2. **Automated Scheduling**: System schedules reminder calls based on medication times
+3. **AI Call Execution**: Bland.ai makes voice calls with personalized scripts
+4. **Outcome Tracking**: Log call results and patient responses
+5. **Follow-up Actions**: Schedule follow-ups for missed calls or emergencies
+
+### Emergency Handling
+
+1. **Emergency Detection**: AI detects emergency keywords in call
+2. **Immediate Transfer**: System transfers to emergency services
+3. **Logging**: Record emergency transfer details
+4. **Notification**: Alert healthcare staff
+5. **Follow-up**: Schedule post-emergency follow-up
+
+### Appointment Management
+
+1. **Booking Creation**: Agent creates appointment in system
+2. **Confirmation Call**: AI sends confirmation call to patient
+3. **Reminder Sequence**: Automated reminders before appointment
+4. **Attendance Tracking**: Log appointment outcomes
+5. **Follow-up Care**: Schedule post-appointment follow-ups
+
+## Code Quality Guidelines
+
+- Always use TypeScript strict mode
+- Implement proper error boundaries
+- Use semantic HTML elements
+- Ensure accessibility compliance (ARIA labels, keyboard navigation)
+- Follow consistent naming conventions:
+  - PascalCase for components
+  - camelCase for functions and variables
+  - UPPER_SNAKE_CASE for constants
+- Comment complex business logic
+- Use meaningful commit messages following conventional commits
+- Implement proper logging for debugging
+- Add proper validation for all user inputs

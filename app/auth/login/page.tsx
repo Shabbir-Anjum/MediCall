@@ -3,14 +3,15 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { signIn, getSession } from 'next-auth/react';
 import { Building2, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -21,31 +22,44 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { toast } = useToast();
+  const searchParams = useSearchParams();
+
+  // Check if user is already authenticated
+  useState(() => {
+    getSession().then((session) => {
+      if (session) {
+        router.push('/dashboard');
+      }
+    });
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // For demo purposes, accept any email/password
-      if (formData.email && formData.password) {
-        toast({
-          title: 'Login Successful',
+      const result = await signIn('credentials', {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        toast.error('Login Failed', {
+          description: 'Invalid email or password. Please try again.',
+        });
+      } else {
+        toast.success('Login Successful', {
           description: 'Welcome back to MediCall!',
         });
-        router.push('/dashboard');
-      } else {
-        throw new Error('Please fill in all fields');
+
+        // Redirect to intended page or dashboard
+        const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+        router.push(callbackUrl);
       }
     } catch (error) {
-      toast({
-        title: 'Login Failed',
-        description: error instanceof Error ? error.message : 'Invalid credentials',
-        variant: 'destructive',
+      toast.error('Login Error', {
+        description: 'An unexpected error occurred. Please try again.',
       });
     } finally {
       setIsLoading(false);
@@ -136,7 +150,7 @@ export default function LoginPage() {
                   <Checkbox
                     id="remember"
                     checked={formData.rememberMe}
-                    onCheckedChange={(checked) => 
+                    onCheckedChange={(checked) =>
                       setFormData(prev => ({ ...prev, rememberMe: checked as boolean }))
                     }
                   />
@@ -144,8 +158,8 @@ export default function LoginPage() {
                     Remember me
                   </Label>
                 </div>
-                <Link 
-                  href="/auth/forgot-password" 
+                <Link
+                  href="/auth/forgot-password"
                   className="text-sm text-blue-600 hover:text-blue-500"
                 >
                   Forgot password?
@@ -174,12 +188,24 @@ export default function LoginPage() {
               <p className="text-xs text-gray-600 text-center mb-2">Demo Credentials:</p>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
-                  <strong>Email:</strong> agent@demo.com
+                  <strong>Email:</strong> admin@medicall.com
                 </div>
                 <div>
-                  <strong>Password:</strong> demo123
+                  <strong>Password:</strong> Admin123!
                 </div>
               </div>
+            </div>
+            {/* Signup Link */}
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                Don&apos;t have an account?{' '}
+                <Link
+                  href="/auth/signup"
+                  className="text-blue-600 hover:text-blue-500 font-medium"
+                >
+                  Create Account
+                </Link>
+              </p>
             </div>
           </CardContent>
         </Card>
