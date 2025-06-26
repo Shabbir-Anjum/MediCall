@@ -1,15 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Building2, Eye, EyeOff, Loader2, UserPlus, Mail, Phone, Building, Shield } from 'lucide-react';
+import { getSession } from 'next-auth/react';
+import {
+  Building2,
+  Eye,
+  EyeOff,
+  Loader2,
+  UserPlus,
+  Mail,
+  Phone,
+  Building,
+  Shield,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { toast } from 'sonner';
 
 interface SignupFormData {
@@ -31,7 +48,7 @@ const departments = [
   'Quality Assurance',
   'Training',
   'Support',
-  'General'
+  'General',
 ];
 
 export default function SignupPage() {
@@ -47,6 +64,15 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    getSession().then((session) => {
+      if (session) {
+        router.push('/dashboard');
+      }
+    });
+  }, [router]);
 
   const validateForm = () => {
     if (!formData.name.trim()) {
@@ -78,7 +104,7 @@ export default function SignupPage() {
     }
 
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords Don\'t Match', {
+      toast.error("Passwords Don't Match", {
         description: 'Please make sure your passwords match.',
       });
       return false;
@@ -113,29 +139,28 @@ export default function SignupPage() {
 
       const data = await response.json();
 
-      if (!response.ok) {
+      if (response.ok) {
+        toast.success('Account Created Successfully! 🎉', {
+          description: 'Your account has been created. You can now sign in.',
+        });
+
+        // Clear form
+        setFormData({
+          name: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          department: 'Call Center',
+          phoneNumber: '',
+        });
+
+        // Redirect to login page after a short delay
+        setTimeout(() => {
+          router.push('/auth/login');
+        }, 2000);
+      } else {
         throw new Error(data.error || 'Failed to create account');
       }
-
-      toast.success('Account Created Successfully! 🎉', {
-        description: 'Your account has been created. You can now sign in.',
-      });
-
-      // Clear form
-      setFormData({
-        name: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        department: 'Call Center',
-        phoneNumber: '',
-      });
-
-      // Redirect to login page after a short delay
-      setTimeout(() => {
-        router.push('/auth/login');
-      }, 2000);
-
     } catch (error) {
       console.error('Signup error:', error);
 
@@ -161,11 +186,11 @@ export default function SignupPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
@@ -194,97 +219,95 @@ export default function SignupPage() {
 
         {/* Signup Card */}
         <Card className="shadow-xl border-0">
-          <CardHeader className="space-y-1 pb-6">
-            <div className="flex items-center justify-center space-x-2 mb-2">
-              <UserPlus className="h-6 w-6 text-blue-600" />
-              <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
-            </div>
+          <CardHeader className="space-y-1 pb-8">
+            <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
             <CardDescription className="text-center">
-              Join the MediCall team and start managing patient communications
+              Join the MediCall team as a call center agent
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Full Name */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Full Name Field */}
               <div className="space-y-2">
-                <Label htmlFor="name" className="flex items-center space-x-2">
-                  <UserPlus className="h-4 w-4" />
-                  <span>Full Name *</span>
-                </Label>
-                <Input
-                  id="name"
-                  name="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Enter your full name"
-                  required
-                  className="h-11"
-                />
-              </div>
-
-              {/* Email */}
-              <div className="space-y-2">
-                <Label htmlFor="email" className="flex items-center space-x-2">
-                  <Mail className="h-4 w-4" />
-                  <span>Email Address *</span>
-                </Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="agent@medicall.com"
-                  required
-                  className="h-11"
-                />
-              </div>
-
-              {/* Phone Number */}
-              <div className="space-y-2">
-                <Label htmlFor="phoneNumber" className="flex items-center space-x-2">
-                  <Phone className="h-4 w-4" />
-                  <span>Phone Number</span>
-                </Label>
-                <Input
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  type="tel"
-                  value={formData.phoneNumber}
-                  onChange={handleInputChange}
-                  placeholder="+1234567890"
-                  className="h-11"
-                />
-              </div>
-
-              {/* Department */}
-              <div className="space-y-2">
-                <Label htmlFor="department" className="flex items-center space-x-2">
-                  <Building className="h-4 w-4" />
-                  <span>Department *</span>
-                </Label>
-                <Select
-                  value={formData.department}
-                  onValueChange={(value) => handleSelectChange('department', value)}
-                >
-                  <SelectTrigger className="h-11">
-                    <SelectValue placeholder="Select your department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departments.map((dept) => (
-                      <SelectItem key={dept} value={dept}>
-                        {dept}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Password */}
-              <div className="space-y-2">
-                <Label htmlFor="password">Password *</Label>
+                <Label htmlFor="name">Full Name</Label>
                 <div className="relative">
+                  <UserPlus className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="name"
+                    name="name"
+                    type="text"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Enter your full name"
+                    required
+                    className="h-11 pl-10"
+                  />
+                </div>
+              </div>
+
+              {/* Email Field */}
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="agent@medicall.com"
+                    required
+                    className="h-11 pl-10"
+                  />
+                </div>
+              </div>
+
+              {/* Phone Number Field */}
+              <div className="space-y-2">
+                <Label htmlFor="phoneNumber">Phone Number</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    type="tel"
+                    value={formData.phoneNumber}
+                    onChange={handleInputChange}
+                    placeholder="+1 (555) 123-4567"
+                    className="h-11 pl-10"
+                  />
+                </div>
+              </div>
+
+              {/* Department Field */}
+              <div className="space-y-2">
+                <Label htmlFor="department">Department</Label>
+                <div className="relative">
+                  <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Select
+                    value={formData.department}
+                    onValueChange={(value) => handleSelectChange('department', value)}
+                  >
+                    <SelectTrigger className="h-11 pl-10">
+                      <SelectValue placeholder="Select department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departments.map((dept) => (
+                        <SelectItem key={dept} value={dept}>
+                          {dept}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Password Field */}
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     id="password"
                     name="password"
@@ -293,7 +316,7 @@ export default function SignupPage() {
                     onChange={handleInputChange}
                     placeholder="Create a strong password"
                     required
-                    className="h-11 pr-10"
+                    className="h-11 pl-10 pr-10"
                   />
                   <button
                     type="button"
@@ -303,15 +326,14 @@ export default function SignupPage() {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                <p className="text-xs text-gray-500">
-                  Must be at least 8 characters long
-                </p>
+                <p className="text-xs text-gray-500">Must be at least 8 characters long</p>
               </div>
 
-              {/* Confirm Password */}
+              {/* Confirm Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <div className="relative">
+                  <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     id="confirmPassword"
                     name="confirmPassword"
@@ -320,14 +342,18 @@ export default function SignupPage() {
                     onChange={handleInputChange}
                     placeholder="Confirm your password"
                     required
-                    className="h-11 pr-10"
+                    className="h-11 pl-10 pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -336,7 +362,7 @@ export default function SignupPage() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-11 bg-blue-600 hover:bg-blue-700 mt-6"
+                className="w-full h-11 bg-blue-600 hover:bg-blue-700"
               >
                 {isLoading ? (
                   <>
@@ -349,32 +375,17 @@ export default function SignupPage() {
               </Button>
             </form>
 
-            {/* Login Link */}
+            {/* Sign In Link */}
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Already have an account?{' '}
-                <Link
-                  href="/auth/login"
-                  className="text-blue-600 hover:text-blue-500 font-medium"
-                >
-                  Sign In
+                <Link href="/auth/login" className="text-blue-600 hover:text-blue-500 font-medium">
+                  Sign in here
                 </Link>
               </p>
             </div>
           </CardContent>
         </Card>
-
-        {/* Footer */}
-        <p className="text-center text-sm text-gray-500 mt-8">
-          By creating an account, you agree to our{' '}
-          <Link href="/terms" className="text-blue-600 hover:text-blue-500">
-            Terms of Service
-          </Link>{' '}
-          and{' '}
-          <Link href="/privacy" className="text-blue-600 hover:text-blue-500">
-            Privacy Policy
-          </Link>
-        </p>
       </motion.div>
     </div>
   );

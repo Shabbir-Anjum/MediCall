@@ -29,7 +29,7 @@ export default function Header({ user }: HeaderProps) {
   const [notifications] = useState(3);
 
   return (
-    <header className="h-16 bg-white border-b border-gray-200 px-6 flex items-center justify-between">
+    <header className="h-16 bg-white border-b border-gray-200 px-6 flex items-center justify-between sticky top-0 z-10">
       {/* Search */}
       <div className="flex-1 max-w-md">
         <div className="relative">

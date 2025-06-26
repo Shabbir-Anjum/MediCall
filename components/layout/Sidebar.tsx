@@ -2,149 +2,185 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
 import {
-  LayoutDashboard,
-  UserPlus,
+  Building2,
   Users,
-  Stethoscope,
+  UserCheck,
   Calendar,
   Phone,
   Settings,
-  Menu,
-  X,
-  Building2,
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { useSession, signOut } from 'next-auth/react';
 
-const navigation = [
+interface SidebarProps {
+  isCollapsed?: boolean;
+  onToggle?: () => void;
+}
+
+const menuItems = [
   {
-    name: 'Dashboard',
+    title: 'Dashboard',
     href: '/dashboard',
-    icon: LayoutDashboard,
+    icon: Building2,
   },
   {
-    name: 'Register Patient',
-    href: '/patients/register',
-    icon: UserPlus,
-  },
-  {
-    name: 'Patients',
-    href: '/patients',
+    title: 'Patients',
+    href: '/dashboard/patients',
     icon: Users,
   },
   {
-    name: 'Doctors',
-    href: '/doctors',
-    icon: Stethoscope,
+    title: 'Doctors',
+    href: '/dashboard/doctors',
+    icon: UserCheck,
   },
   {
-    name: 'Active Bookings',
-    href: '/bookings',
+    title: 'Bookings',
+    href: '/dashboard/bookings',
     icon: Calendar,
   },
   {
-    name: 'Call History',
-    href: '/calls',
+    title: 'Call Logs',
+    href: '/dashboard/calls',
     icon: Phone,
   },
   {
-    name: 'Settings',
-    href: '/settings',
+    title: 'Settings',
+    href: '/dashboard/settings',
     icon: Settings,
   },
 ];
 
-export default function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+export default function Sidebar({ isCollapsed = false, onToggle }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { data: session } = useSession();
+
+  const handleLogout = async () => {
+    try {
+      await signOut({
+        callbackUrl: '/',
+        redirect: true,
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Fallback redirect
+      router.push('/');
+    }
+  };
 
   return (
     <motion.div
-      initial={{ width: 256 }}
-      animate={{ width: collapsed ? 80 : 256 }}
+      initial={false}
+      animate={{ width: isCollapsed ? 80 : 280 }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="h-screen bg-white border-r border-gray-200 flex flex-col"
+      className="bg-white border-r border-gray-200 h-full flex flex-col"
     >
       {/* Header */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <motion.div
-            initial={{ opacity: 1 }}
-            animate={{ opacity: collapsed ? 0 : 1 }}
-            transition={{ duration: 0.2 }}
-            className="flex items-center space-x-2"
-          >
-            {!collapsed && (
-              <>
-                <Building2 className="h-8 w-8 text-blue-600" />
-                <div>
-                  <h1 className="font-bold text-gray-900">MediCall</h1>
-                  <p className="text-xs text-gray-500">Call Center</p>
-                </div>
-              </>
-            )}
-          </motion.div>
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            {collapsed ? (
-              <Menu className="h-5 w-5 text-gray-600" />
-            ) : (
-              <X className="h-5 w-5 text-gray-600" />
-            )}
-          </button>
+          {!isCollapsed && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="flex items-center space-x-3"
+            >
+              <Building2 className="h-8 w-8 text-blue-600" />
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">MediCall</h1>
+                <p className="text-xs text-gray-500">Call Center</p>
+              </div>
+            </motion.div>
+          )}
+          {onToggle && (
+            <Button variant="ghost" size="sm" onClick={onToggle} className="h-8 w-8 p-0">
+              {isCollapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
-        {navigation.map((item) => {
+        {menuItems.map((item) => {
           const isActive = pathname === item.href;
           return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={cn(
-                'flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200',
-                isActive
-                  ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900',
-              )}
-            >
-              <item.icon className={cn('h-5 w-5', isActive ? 'text-blue-600' : 'text-gray-500')} />
-              <motion.span
-                initial={{ opacity: 1 }}
-                animate={{ opacity: collapsed ? 0 : 1 }}
-                transition={{ duration: 0.2 }}
-                className="font-medium"
+            <Link key={item.href} href={item.href}>
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={cn(
+                  'flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors cursor-pointer',
+                  isActive
+                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900',
+                )}
               >
-                {!collapsed && item.name}
-              </motion.span>
-              {isActive && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="ml-auto h-2 w-2 bg-blue-600 rounded-full"
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                />
-              )}
+                <item.icon className="h-5 w-5 flex-shrink-0" />
+                {!isCollapsed && (
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                    className="font-medium"
+                  >
+                    {item.title}
+                  </motion.span>
+                )}
+              </motion.div>
             </Link>
           );
         })}
       </nav>
 
-      {/* Footer */}
+      {/* User Info and Logout */}
       <div className="p-4 border-t border-gray-200">
-        <motion.div
-          initial={{ opacity: 1 }}
-          animate={{ opacity: collapsed ? 0 : 1 }}
-          transition={{ duration: 0.2 }}
-          className="text-xs text-gray-500 text-center"
+        {session?.user && (
+          <div className="mb-4">
+            {!isCollapsed && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.1 }}
+                className="text-sm"
+              >
+                <p className="font-medium text-gray-900 truncate">
+                  {session.user.name || session.user.email}
+                </p>
+                <p className="text-xs text-gray-500">Agent</p>
+              </motion.div>
+            )}
+          </div>
+        )}
+
+        <Button
+          variant="outline"
+          onClick={handleLogout}
+          className={cn('w-full justify-start', isCollapsed ? 'px-2' : 'px-3')}
         >
-          {!collapsed && '© 2024 MediCall System'}
-        </motion.div>
+          <LogOut className="h-4 w-4" />
+          {!isCollapsed && (
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="ml-3"
+            >
+              Logout
+            </motion.span>
+          )}
+        </Button>
       </div>
     </motion.div>
   );

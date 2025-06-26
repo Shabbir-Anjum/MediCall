@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -25,13 +25,13 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
 
   // Check if user is already authenticated
-  useState(() => {
+  useEffect(() => {
     getSession().then((session) => {
       if (session) {
         router.push('/dashboard');
       }
     });
-  });
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
