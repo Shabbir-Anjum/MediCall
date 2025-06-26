@@ -14,51 +14,54 @@ export interface IUser extends Document {
   updatedAt: Date;
 }
 
-const UserSchema: Schema = new Schema({
-  name: {
-    type: String,
-    required: [true, 'Name is required'],
-    trim: true,
+const UserSchema: Schema = new Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'Name is required'],
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: [true, 'Email is required'],
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    password: {
+      type: String,
+      required: [true, 'Password is required'],
+      minlength: 6,
+    },
+    role: {
+      type: String,
+      enum: ['agent', 'admin', 'supervisor'],
+      default: 'agent',
+    },
+    avatar: {
+      type: String,
+      default: '',
+    },
+    department: {
+      type: String,
+      required: true,
+      default: 'General',
+    },
+    phoneNumber: {
+      type: String,
+      trim: true,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    lastLogin: {
+      type: Date,
+    },
   },
-  email: {
-    type: String,
-    required: [true, 'Email is required'],
-    unique: true,
-    lowercase: true,
-    trim: true,
+  {
+    timestamps: true,
   },
-  password: {
-    type: String,
-    required: [true, 'Password is required'],
-    minlength: 6,
-  },
-  role: {
-    type: String,
-    enum: ['agent', 'admin', 'supervisor'],
-    default: 'agent',
-  },
-  avatar: {
-    type: String,
-    default: '',
-  },
-  department: {
-    type: String,
-    required: true,
-    default: 'General',
-  },
-  phoneNumber: {
-    type: String,
-    trim: true,
-  },
-  isActive: {
-    type: Boolean,
-    default: true,
-  },
-  lastLogin: {
-    type: Date,
-  },
-}, {
-  timestamps: true,
-});
+);
 
 export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema);

@@ -5,6 +5,7 @@ A comprehensive Next.js application for managing hospital call center operations
 ## 🏥 Features
 
 ### Core Modules
+
 - **Dashboard & Authentication** - Secure login and overview analytics
 - **Patient Registration** - Complete patient onboarding with medication schedules
 - **Patient Management** - Search, filter, and manage patient records
@@ -14,6 +15,7 @@ A comprehensive Next.js application for managing hospital call center operations
 - **Settings** - System configuration and user preferences
 
 ### Key Capabilities
+
 - 🤖 **AI-Powered Calling** - Automated voice reminders via Bland.ai
 - 📱 **Multi-Channel Reminders** - SMS, voice calls, and email notifications
 - 📊 **Real-time Analytics** - Dashboard with call success rates and metrics
@@ -35,18 +37,21 @@ A comprehensive Next.js application for managing hospital call center operations
 ## 📦 Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd hospital-call-center
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Environment Setup**
    Create a `.env.local` file in the root directory:
+
    ```env
    # MongoDB
    MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/medicall?retryWrites=true&w=majority
@@ -67,6 +72,7 @@ A comprehensive Next.js application for managing hospital call center operations
    ```
 
 4. **Run the development server**
+
    ```bash
    npm run dev
    ```
@@ -77,6 +83,7 @@ A comprehensive Next.js application for managing hospital call center operations
 ## 🗄️ Database Schema
 
 ### Collections
+
 - **Users** - Agent accounts and authentication
 - **Patients** - Patient records with medication schedules
 - **Doctors** - Doctor profiles and availability
@@ -84,6 +91,7 @@ A comprehensive Next.js application for managing hospital call center operations
 - **CallLogs** - Call history and outcomes
 
 ### Key Features
+
 - Mongoose ODM for type-safe database operations
 - Automatic timestamps and validation
 - Relationship mapping between collections
@@ -92,41 +100,50 @@ A comprehensive Next.js application for managing hospital call center operations
 ## 🔧 API Endpoints
 
 ### Patients
+
 - `GET /api/patients` - Fetch patients with filtering
 - `POST /api/patients` - Create new patient record
 
 ### Doctors
+
 - `GET /api/doctors` - Fetch doctors with filtering
 - `POST /api/doctors` - Add new doctor
 
 ### Bookings
+
 - `GET /api/bookings` - Fetch appointments
 - `POST /api/bookings` - Create new booking
 
 ### Call Logs
+
 - `GET /api/call-logs` - Fetch call history
 - `POST /api/call-logs` - Log new call
 
 ### File Upload
+
 - `POST /api/upload` - Upload prescription images and profile photos
 
 ### Webhooks
+
 - `POST /api/bland-ai/webhook` - Handle Bland.ai call status updates
 
 ## 🎨 UI/UX Design
 
 ### Design System
+
 - **Primary Colors**: Blue (#3B82F6), Teal (#14B8A6)
 - **Typography**: Inter font family with consistent sizing
 - **Spacing**: 8px grid system for consistent layouts
 - **Components**: shadcn/ui for accessible, customizable components
 
 ### Responsive Design
+
 - Mobile-first approach with breakpoints at 768px, 1024px, 1280px
 - Collapsible sidebar navigation for space efficiency
 - Optimized touch targets for mobile devices
 
 ### Animations
+
 - Smooth page transitions with Framer Motion
 - Micro-interactions for better user feedback
 - Loading states and skeleton screens
@@ -142,39 +159,45 @@ A comprehensive Next.js application for managing hospital call center operations
 ## 📱 Bland.ai Integration
 
 ### Voice Calling
+
 ```javascript
 // Example: Making an automated reminder call
 const callResult = await blandAiService.makeCall(
   patient.mobileNumber,
   generateMedicationReminderScript(patient.name, medication.name, medication.dosage),
-  patient.name
+  patient.name,
 );
 ```
 
 ### SMS Notifications
+
 ```javascript
 // Example: Sending SMS reminder
 const smsResult = await blandAiService.sendSMS(
   patient.mobileNumber,
-  `Hi ${patient.name}, this is a reminder to take your ${medication.name} medication.`
+  `Hi ${patient.name}, this is a reminder to take your ${medication.name} medication.`,
 );
 ```
 
 ## 🚀 Deployment
 
 ### Production Build
+
 ```bash
 npm run build
 npm start
 ```
 
 ### Environment Variables (Production)
+
 Ensure all environment variables are properly set in your production environment, especially:
+
 - MongoDB connection string with proper authentication
 - Bland.ai API key with sufficient credits
 - Secure NextAuth secret for session encryption
 
 ### Recommended Hosting
+
 - **Vercel** - Optimal for Next.js applications
 - **Railway** - Good for full-stack apps with databases
 - **DigitalOcean** - For custom server configurations
@@ -182,12 +205,14 @@ Ensure all environment variables are properly set in your production environment
 ## 📊 Monitoring & Analytics
 
 ### Built-in Analytics
+
 - Call success rates and failure analysis
 - Patient engagement metrics
 - Agent performance tracking
 - Emergency call response times
 
 ### Logging
+
 - Comprehensive error logging
 - Call outcome tracking
 - User activity monitoring
@@ -208,6 +233,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🆘 Support
 
 For support and questions:
+
 - Create an issue in the GitHub repository
 - Check the documentation in the `/docs` folder
 - Review the API documentation at `/api-docs` (when running locally)

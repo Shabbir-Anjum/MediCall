@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Users, 
-  Phone, 
-  Calendar, 
+import {
+  Users,
+  Phone,
+  Calendar,
   AlertTriangle,
   TrendingUp,
   Clock,
   CheckCircle,
-  XCircle
+  XCircle,
 } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
@@ -24,7 +24,8 @@ export default function DashboardPage() {
     name: 'Sarah Johnson',
     email: 'sarah.johnson@medicall.com',
     role: 'senior agent',
-    avatar: 'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150',
+    avatar:
+      'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150',
   });
 
   const [dashboardData, setDashboardData] = useState({
@@ -98,10 +99,10 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar />
-      
+
       <div className="flex-1 flex flex-col">
         <Header user={user} />
-        
+
         <main className="flex-1 p-6">
           {/* Welcome Section */}
           <motion.div
@@ -113,9 +114,7 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Good morning, {user.name.split(' ')[0]}! 👋
             </h1>
-            <p className="text-gray-600">
-              Here's what's happening in your call center today.
-            </p>
+            <p className="text-gray-600">Here's what's happening in your call center today.</p>
           </motion.div>
 
           {/* Stats Grid */}
@@ -178,11 +177,20 @@ export default function DashboardPage() {
                 <CardContent>
                   <div className="space-y-4">
                     {recentActivities.map((activity) => (
-                      <div key={activity.id} className="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div
+                        key={activity.id}
+                        className="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
                         <div className="flex-shrink-0">
-                          {activity.status === 'success' && <CheckCircle className="h-5 w-5 text-green-500" />}
-                          {activity.status === 'alert' && <AlertTriangle className="h-5 w-5 text-red-500" />}
-                          {activity.status === 'warning' && <Clock className="h-5 w-5 text-yellow-500" />}
+                          {activity.status === 'success' && (
+                            <CheckCircle className="h-5 w-5 text-green-500" />
+                          )}
+                          {activity.status === 'alert' && (
+                            <AlertTriangle className="h-5 w-5 text-red-500" />
+                          )}
+                          {activity.status === 'warning' && (
+                            <Clock className="h-5 w-5 text-yellow-500" />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900">{activity.patient}</p>
@@ -213,10 +221,13 @@ export default function DashboardPage() {
                     {upcomingTasks.map((task) => (
                       <div key={task.id} className="p-3 rounded-lg border border-gray-100">
                         <div className="flex items-center justify-between mb-2">
-                          <Badge 
+                          <Badge
                             variant={
-                              task.priority === 'high' ? 'destructive' : 
-                              task.priority === 'medium' ? 'default' : 'secondary'
+                              task.priority === 'high'
+                                ? 'destructive'
+                                : task.priority === 'medium'
+                                  ? 'default'
+                                  : 'secondary'
                             }
                             className="text-xs"
                           >
@@ -254,15 +265,24 @@ export default function DashboardPage() {
                     <Users className="h-6 w-6" />
                     <span>Register Patient</span>
                   </Button>
-                  <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
+                  <Button
+                    variant="outline"
+                    className="h-20 flex flex-col items-center justify-center space-y-2"
+                  >
                     <Phone className="h-6 w-6" />
                     <span>Make Call</span>
                   </Button>
-                  <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
+                  <Button
+                    variant="outline"
+                    className="h-20 flex flex-col items-center justify-center space-y-2"
+                  >
                     <Calendar className="h-6 w-6" />
                     <span>Book Appointment</span>
                   </Button>
-                  <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
+                  <Button
+                    variant="outline"
+                    className="h-20 flex flex-col items-center justify-center space-y-2"
+                  >
                     <TrendingUp className="h-6 w-6" />
                     <span>View Reports</span>
                   </Button>

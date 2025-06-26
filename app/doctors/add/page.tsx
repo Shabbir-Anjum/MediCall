@@ -11,7 +11,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 
@@ -76,21 +82,13 @@ const departments = [
   'Laboratory',
 ];
 
-const daysOfWeek = [
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-  'Sunday',
-];
+const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export default function AddDoctorPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const [formData, setFormData] = useState<DoctorFormData>({
     name: '',
     email: '',
@@ -109,27 +107,28 @@ export default function AddDoctorPage() {
     name: 'Sarah Johnson',
     email: 'sarah.johnson@medicall.com',
     role: 'senior agent',
-    avatar: 'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150',
+    avatar:
+      'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150',
   });
 
   const addQualification = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       qualifications: [...prev.qualifications, ''],
     }));
   };
 
   const removeQualification = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       qualifications: prev.qualifications.filter((_, i) => i !== index),
     }));
   };
 
   const updateQualification = (index: number, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      qualifications: prev.qualifications.map((qual, i) => i === index ? value : qual),
+      qualifications: prev.qualifications.map((qual, i) => (i === index ? value : qual)),
     }));
   };
 
@@ -140,24 +139,24 @@ export default function AddDoctorPage() {
       startTime: '',
       endTime: '',
     };
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       availabilitySlots: [...prev.availabilitySlots, newSlot],
     }));
   };
 
   const removeAvailabilitySlot = (id: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      availabilitySlots: prev.availabilitySlots.filter(slot => slot.id !== id),
+      availabilitySlots: prev.availabilitySlots.filter((slot) => slot.id !== id),
     }));
   };
 
   const updateAvailabilitySlot = (id: string, field: keyof AvailabilitySlot, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      availabilitySlots: prev.availabilitySlots.map(slot =>
-        slot.id === id ? { ...slot, [field]: value } : slot
+      availabilitySlots: prev.availabilitySlots.map((slot) =>
+        slot.id === id ? { ...slot, [field]: value } : slot,
       ),
     }));
   };
@@ -165,7 +164,7 @@ export default function AddDoctorPage() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormData(prev => ({ ...prev, profileImage: file }));
+      setFormData((prev) => ({ ...prev, profileImage: file }));
     }
   };
 
@@ -175,13 +174,13 @@ export default function AddDoctorPage() {
 
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       toast({
         title: 'Doctor Added Successfully',
         description: `Dr. ${formData.name} has been added to the system.`,
       });
-      
+
       router.push('/doctors');
     } catch (error) {
       toast({
@@ -197,10 +196,10 @@ export default function AddDoctorPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar />
-      
+
       <div className="flex-1 flex flex-col">
         <Header user={user} />
-        
+
         <main className="flex-1 p-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -225,7 +224,7 @@ export default function AddDoctorPage() {
                       <Input
                         id="name"
                         value={formData.name}
-                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                         placeholder="Dr. John Smith"
                         required
                       />
@@ -236,20 +235,24 @@ export default function AddDoctorPage() {
                         id="email"
                         type="email"
                         value={formData.email}
-                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, email: e.target.value }))
+                        }
                         placeholder="doctor@hospital.com"
                         required
                       />
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="phone">Phone Number *</Label>
                       <Input
                         id="phone"
                         value={formData.phoneNumber}
-                        onChange={(e) => setFormData(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, phoneNumber: e.target.value }))
+                        }
                         placeholder="+1 (555) 123-4567"
                         required
                       />
@@ -259,7 +262,9 @@ export default function AddDoctorPage() {
                       <Input
                         id="license"
                         value={formData.licenseNumber}
-                        onChange={(e) => setFormData(prev => ({ ...prev, licenseNumber: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, licenseNumber: e.target.value }))
+                        }
                         placeholder="MD123456"
                         required
                       />
@@ -269,12 +274,16 @@ export default function AddDoctorPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="specialty">Specialty *</Label>
-                      <Select onValueChange={(value) => setFormData(prev => ({ ...prev, specialty: value }))}>
+                      <Select
+                        onValueChange={(value) =>
+                          setFormData((prev) => ({ ...prev, specialty: value }))
+                        }
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select specialty" />
                         </SelectTrigger>
                         <SelectContent>
-                          {specialties.map(specialty => (
+                          {specialties.map((specialty) => (
                             <SelectItem key={specialty} value={specialty}>
                               {specialty}
                             </SelectItem>
@@ -284,12 +293,16 @@ export default function AddDoctorPage() {
                     </div>
                     <div>
                       <Label htmlFor="department">Department *</Label>
-                      <Select onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}>
+                      <Select
+                        onValueChange={(value) =>
+                          setFormData((prev) => ({ ...prev, department: value }))
+                        }
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select department" />
                         </SelectTrigger>
                         <SelectContent>
-                          {departments.map(department => (
+                          {departments.map((department) => (
                             <SelectItem key={department} value={department}>
                               {department}
                             </SelectItem>
@@ -307,7 +320,12 @@ export default function AddDoctorPage() {
                         type="number"
                         min="0"
                         value={formData.experience}
-                        onChange={(e) => setFormData(prev => ({ ...prev, experience: parseInt(e.target.value) || 0 }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            experience: parseInt(e.target.value) || 0,
+                          }))
+                        }
                         placeholder="10"
                       />
                     </div>
@@ -318,7 +336,12 @@ export default function AddDoctorPage() {
                         type="number"
                         min="0"
                         value={formData.consultationFee}
-                        onChange={(e) => setFormData(prev => ({ ...prev, consultationFee: parseInt(e.target.value) || 0 }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            consultationFee: parseInt(e.target.value) || 0,
+                          }))
+                        }
                         placeholder="200"
                       />
                     </div>
@@ -329,7 +352,7 @@ export default function AddDoctorPage() {
                     <Textarea
                       id="bio"
                       value={formData.bio}
-                      onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, bio: e.target.value }))}
                       placeholder="Brief description about the doctor..."
                       className="min-h-[100px] resize-none"
                     />
@@ -432,16 +455,20 @@ export default function AddDoctorPage() {
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
                             <Label>Day</Label>
-                            <Select onValueChange={(value) => updateAvailabilitySlot(slot.id, 'day', value)}>
+                            <Select
+                              onValueChange={(value) =>
+                                updateAvailabilitySlot(slot.id, 'day', value)
+                              }
+                            >
                               <SelectTrigger>
                                 <SelectValue placeholder="Select day" />
                               </SelectTrigger>
                               <SelectContent>
-                                {daysOfWeek.map(day => (
+                                {daysOfWeek.map((day) => (
                                   <SelectItem key={day} value={day}>
                                     {day}
                                   </SelectItem>
@@ -454,7 +481,9 @@ export default function AddDoctorPage() {
                             <Input
                               type="time"
                               value={slot.startTime}
-                              onChange={(e) => updateAvailabilitySlot(slot.id, 'startTime', e.target.value)}
+                              onChange={(e) =>
+                                updateAvailabilitySlot(slot.id, 'startTime', e.target.value)
+                              }
                             />
                           </div>
                           <div>
@@ -462,7 +491,9 @@ export default function AddDoctorPage() {
                             <Input
                               type="time"
                               value={slot.endTime}
-                              onChange={(e) => updateAvailabilitySlot(slot.id, 'endTime', e.target.value)}
+                              onChange={(e) =>
+                                updateAvailabilitySlot(slot.id, 'endTime', e.target.value)
+                              }
                             />
                           </div>
                         </div>
@@ -474,16 +505,16 @@ export default function AddDoctorPage() {
 
               {/* Submit Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-end">
-                <Button 
-                  type="button" 
+                <Button
+                  type="button"
                   variant="outline"
                   onClick={() => router.push('/doctors')}
                   disabled={isLoading}
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={isLoading}
                   className="bg-blue-600 hover:bg-blue-700"
                 >

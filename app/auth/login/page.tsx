@@ -29,8 +29,8 @@ export default function LoginPage() {
 
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       // For demo purposes, accept any email/password
       if (formData.email && formData.password) {
         toast({
@@ -54,7 +54,7 @@ export default function LoginPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
@@ -136,16 +136,16 @@ export default function LoginPage() {
                   <Checkbox
                     id="remember"
                     checked={formData.rememberMe}
-                    onCheckedChange={(checked) => 
-                      setFormData(prev => ({ ...prev, rememberMe: checked as boolean }))
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({ ...prev, rememberMe: checked as boolean }))
                     }
                   />
                   <Label htmlFor="remember" className="text-sm text-gray-600">
                     Remember me
                   </Label>
                 </div>
-                <Link 
-                  href="/auth/forgot-password" 
+                <Link
+                  href="/auth/forgot-password"
                   className="text-sm text-blue-600 hover:text-blue-500"
                 >
                   Forgot password?

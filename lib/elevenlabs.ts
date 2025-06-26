@@ -19,7 +19,11 @@ class ElevenLabsService {
     };
   }
 
-  async cloneVoice(audioFile: File, voiceName: string, description?: string): Promise<VoiceCloneResponse> {
+  async cloneVoice(
+    audioFile: File,
+    voiceName: string,
+    description?: string,
+  ): Promise<VoiceCloneResponse> {
     try {
       const formData = new FormData();
       formData.append('files', audioFile);

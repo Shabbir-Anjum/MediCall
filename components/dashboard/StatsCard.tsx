@@ -71,8 +71,8 @@ export default function StatsCard({
                     changeType === 'positive'
                       ? 'text-green-600'
                       : changeType === 'negative'
-                      ? 'text-red-600'
-                      : 'text-gray-600'
+                        ? 'text-red-600'
+                        : 'text-gray-600'
                   }`}
                 >
                   {change}

@@ -41,7 +41,8 @@ export default function PatientsPage() {
     name: 'Sarah Johnson',
     email: 'sarah.johnson@medicall.com',
     role: 'senior agent',
-    avatar: 'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150',
+    avatar:
+      'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150',
   });
 
   // Mock data - replace with API call
@@ -55,7 +56,8 @@ export default function PatientsPage() {
         status: 'active',
         nextReminderDue: '2024-01-15 09:00 AM',
         medicationsCount: 3,
-        avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150',
+        avatar:
+          'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150',
         lastReminderSent: '2024-01-14 09:00 AM',
       },
       {
@@ -66,7 +68,8 @@ export default function PatientsPage() {
         status: 'active',
         nextReminderDue: '2024-01-15 02:00 PM',
         medicationsCount: 2,
-        avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150',
+        avatar:
+          'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150',
         lastReminderSent: '2024-01-14 02:00 PM',
       },
       {
@@ -87,7 +90,8 @@ export default function PatientsPage() {
         status: 'completed',
         nextReminderDue: 'Treatment Complete',
         medicationsCount: 0,
-        avatar: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=150',
+        avatar:
+          'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=150',
         lastReminderSent: '2024-01-12 08:00 AM',
       },
     ];
@@ -98,29 +102,34 @@ export default function PatientsPage() {
     }, 1000);
   }, []);
 
-  const filteredPatients = patients.filter(patient => {
-    const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         patient.email.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredPatients = patients.filter((patient) => {
+    const matchesSearch =
+      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || patient.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'paused': return 'bg-yellow-100 text-yellow-800';
-      case 'completed': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'paused':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'completed':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar />
-      
+
       <div className="flex-1 flex flex-col">
         <Header user={user} />
-        
+
         <main className="flex-1 p-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -131,9 +140,11 @@ export default function PatientsPage() {
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Patients</h1>
-                <p className="text-gray-600 mt-2">Manage patient records and medication schedules</p>
+                <p className="text-gray-600 mt-2">
+                  Manage patient records and medication schedules
+                </p>
               </div>
-              <Button 
+              <Button
                 onClick={() => router.push('/patients/register')}
                 className="bg-blue-600 hover:bg-blue-700"
               >
@@ -220,7 +231,10 @@ export default function PatientsPage() {
                             <Avatar>
                               <AvatarImage src={patient.avatar} alt={patient.name} />
                               <AvatarFallback>
-                                {patient.name.split(' ').map(n => n[0]).join('')}
+                                {patient.name
+                                  .split(' ')
+                                  .map((n) => n[0])
+                                  .join('')}
                               </AvatarFallback>
                             </Avatar>
                             <div>
@@ -228,9 +242,7 @@ export default function PatientsPage() {
                               <p className="text-sm text-gray-500">{patient.email}</p>
                             </div>
                           </div>
-                          <Badge className={getStatusColor(patient.status)}>
-                            {patient.status}
-                          </Badge>
+                          <Badge className={getStatusColor(patient.status)}>{patient.status}</Badge>
                         </div>
 
                         <div className="space-y-2 mb-4">
@@ -249,7 +261,9 @@ export default function PatientsPage() {
                           {patient.lastReminderSent && (
                             <div className="flex justify-between text-sm">
                               <span className="text-gray-500">Last Sent:</span>
-                              <span className="text-gray-900 text-xs">{patient.lastReminderSent}</span>
+                              <span className="text-gray-900 text-xs">
+                                {patient.lastReminderSent}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -263,10 +277,12 @@ export default function PatientsPage() {
                             <Edit className="h-3 w-3 mr-1" />
                             Edit
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
-                            className={patient.status === 'active' ? 'text-yellow-600' : 'text-green-600'}
+                            className={
+                              patient.status === 'active' ? 'text-yellow-600' : 'text-green-600'
+                            }
                           >
                             {patient.status === 'active' ? (
                               <Pause className="h-3 w-3" />
@@ -290,10 +306,9 @@ export default function PatientsPage() {
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No patients found</h3>
                   <p className="text-gray-500 mb-4">
-                    {searchTerm || statusFilter !== 'all' 
+                    {searchTerm || statusFilter !== 'all'
                       ? 'Try adjusting your search or filter criteria.'
-                      : 'Get started by registering your first patient.'
-                    }
+                      : 'Get started by registering your first patient.'}
                   </p>
                   <Button onClick={() => router.push('/patients/register')}>
                     <Plus className="h-4 w-4 mr-2" />

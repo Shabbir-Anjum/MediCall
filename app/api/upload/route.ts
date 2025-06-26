@@ -19,26 +19,23 @@ export async function POST(request: NextRequest) {
     const timestamp = Date.now();
     const extension = file.name.split('.').pop();
     const filename = `${type}_${timestamp}.${extension}`;
-    
+
     // Save to public/uploads directory
     const uploadDir = join(process.cwd(), 'public', 'uploads');
     const filepath = join(uploadDir, filename);
-    
+
     await writeFile(filepath, buffer);
-    
+
     // Return the public URL
     const publicUrl = `/uploads/${filename}`;
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       message: 'File uploaded successfully',
       url: publicUrl,
-      filename 
+      filename,
     });
   } catch (error) {
     console.error('Error uploading file:', error);
-    return NextResponse.json(
-      { error: 'Failed to upload file' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 });
   }
 }
