@@ -22,7 +22,8 @@ export default function SettingsPage() {
     name: 'Sarah Johnson',
     email: 'sarah.johnson@medicall.com',
     role: 'senior agent',
-    avatar: 'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150',
+    avatar:
+      'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150',
   });
 
   const [settings, setSettings] = useState({
@@ -56,8 +57,8 @@ export default function SettingsPage() {
     setIsLoading(true);
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       toast({
         title: 'Settings Saved',
         description: `${section} settings have been updated successfully.`,
@@ -76,10 +77,10 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar />
-      
+
       <div className="flex-1 flex flex-col">
         <Header user={user} />
-        
+
         <main className="flex-1 p-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -115,10 +116,12 @@ export default function SettingsPage() {
                         <Input
                           id="name"
                           value={settings.profile.name}
-                          onChange={(e) => setSettings(prev => ({
-                            ...prev,
-                            profile: { ...prev.profile, name: e.target.value }
-                          }))}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              profile: { ...prev.profile, name: e.target.value },
+                            }))
+                          }
                         />
                       </div>
                       <div>
@@ -127,24 +130,28 @@ export default function SettingsPage() {
                           id="email"
                           type="email"
                           value={settings.profile.email}
-                          onChange={(e) => setSettings(prev => ({
-                            ...prev,
-                            profile: { ...prev.profile, email: e.target.value }
-                          }))}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              profile: { ...prev.profile, email: e.target.value },
+                            }))
+                          }
                         />
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="phone">Phone Number</Label>
                         <Input
                           id="phone"
                           value={settings.profile.phone}
-                          onChange={(e) => setSettings(prev => ({
-                            ...prev,
-                            profile: { ...prev.profile, phone: e.target.value }
-                          }))}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              profile: { ...prev.profile, phone: e.target.value },
+                            }))
+                          }
                         />
                       </div>
                       <div>
@@ -152,16 +159,18 @@ export default function SettingsPage() {
                         <Input
                           id="department"
                           value={settings.profile.department}
-                          onChange={(e) => setSettings(prev => ({
-                            ...prev,
-                            profile: { ...prev.profile, department: e.target.value }
-                          }))}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              profile: { ...prev.profile, department: e.target.value },
+                            }))
+                          }
                         />
                       </div>
                     </div>
 
                     <div className="flex justify-end">
-                      <Button 
+                      <Button
                         onClick={() => handleSave('Profile')}
                         disabled={isLoading}
                         className="bg-blue-600 hover:bg-blue-700"
@@ -191,15 +200,17 @@ export default function SettingsPage() {
                       </div>
                       <Switch
                         checked={settings.notifications.emailNotifications}
-                        onCheckedChange={(checked) => setSettings(prev => ({
-                          ...prev,
-                          notifications: { ...prev.notifications, emailNotifications: checked }
-                        }))}
+                        onCheckedChange={(checked) =>
+                          setSettings((prev) => ({
+                            ...prev,
+                            notifications: { ...prev.notifications, emailNotifications: checked },
+                          }))
+                        }
                       />
                     </div>
-                    
+
                     <Separator />
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label>SMS Notifications</Label>
@@ -207,15 +218,17 @@ export default function SettingsPage() {
                       </div>
                       <Switch
                         checked={settings.notifications.smsNotifications}
-                        onCheckedChange={(checked) => setSettings(prev => ({
-                          ...prev,
-                          notifications: { ...prev.notifications, smsNotifications: checked }
-                        }))}
+                        onCheckedChange={(checked) =>
+                          setSettings((prev) => ({
+                            ...prev,
+                            notifications: { ...prev.notifications, smsNotifications: checked },
+                          }))
+                        }
                       />
                     </div>
-                    
+
                     <Separator />
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label>Push Notifications</Label>
@@ -223,31 +236,37 @@ export default function SettingsPage() {
                       </div>
                       <Switch
                         checked={settings.notifications.pushNotifications}
-                        onCheckedChange={(checked) => setSettings(prev => ({
-                          ...prev,
-                          notifications: { ...prev.notifications, pushNotifications: checked }
-                        }))}
+                        onCheckedChange={(checked) =>
+                          setSettings((prev) => ({
+                            ...prev,
+                            notifications: { ...prev.notifications, pushNotifications: checked },
+                          }))
+                        }
                       />
                     </div>
-                    
+
                     <Separator />
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label>Emergency Alerts</Label>
-                        <p className="text-sm text-gray-500">Receive immediate emergency notifications</p>
+                        <p className="text-sm text-gray-500">
+                          Receive immediate emergency notifications
+                        </p>
                       </div>
                       <Switch
                         checked={settings.notifications.emergencyAlerts}
-                        onCheckedChange={(checked) => setSettings(prev => ({
-                          ...prev,
-                          notifications: { ...prev.notifications, emergencyAlerts: checked }
-                        }))}
+                        onCheckedChange={(checked) =>
+                          setSettings((prev) => ({
+                            ...prev,
+                            notifications: { ...prev.notifications, emergencyAlerts: checked },
+                          }))
+                        }
                       />
                     </div>
 
                     <div className="flex justify-end">
-                      <Button 
+                      <Button
                         onClick={() => handleSave('Notification')}
                         disabled={isLoading}
                         className="bg-blue-600 hover:bg-blue-700"
@@ -273,35 +292,43 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <Label>Auto Dial</Label>
-                        <p className="text-sm text-gray-500">Automatically dial next patient in queue</p>
+                        <p className="text-sm text-gray-500">
+                          Automatically dial next patient in queue
+                        </p>
                       </div>
                       <Switch
                         checked={settings.callCenter.autoDialEnabled}
-                        onCheckedChange={(checked) => setSettings(prev => ({
-                          ...prev,
-                          callCenter: { ...prev.callCenter, autoDialEnabled: checked }
-                        }))}
+                        onCheckedChange={(checked) =>
+                          setSettings((prev) => ({
+                            ...prev,
+                            callCenter: { ...prev.callCenter, autoDialEnabled: checked },
+                          }))
+                        }
                       />
                     </div>
-                    
+
                     <Separator />
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label>Call Recording</Label>
-                        <p className="text-sm text-gray-500">Record all calls for quality assurance</p>
+                        <p className="text-sm text-gray-500">
+                          Record all calls for quality assurance
+                        </p>
                       </div>
                       <Switch
                         checked={settings.callCenter.callRecording}
-                        onCheckedChange={(checked) => setSettings(prev => ({
-                          ...prev,
-                          callCenter: { ...prev.callCenter, callRecording: checked }
-                        }))}
+                        onCheckedChange={(checked) =>
+                          setSettings((prev) => ({
+                            ...prev,
+                            callCenter: { ...prev.callCenter, callRecording: checked },
+                          }))
+                        }
                       />
                     </div>
-                    
+
                     <Separator />
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <Label>Voicemail Transcription</Label>
@@ -309,15 +336,17 @@ export default function SettingsPage() {
                       </div>
                       <Switch
                         checked={settings.callCenter.voicemailTranscription}
-                        onCheckedChange={(checked) => setSettings(prev => ({
-                          ...prev,
-                          callCenter: { ...prev.callCenter, voicemailTranscription: checked }
-                        }))}
+                        onCheckedChange={(checked) =>
+                          setSettings((prev) => ({
+                            ...prev,
+                            callCenter: { ...prev.callCenter, voicemailTranscription: checked },
+                          }))
+                        }
                       />
                     </div>
-                    
+
                     <Separator />
-                    
+
                     <div>
                       <Label htmlFor="timeout">Call Timeout (seconds)</Label>
                       <Input
@@ -326,10 +355,15 @@ export default function SettingsPage() {
                         min="10"
                         max="120"
                         value={settings.callCenter.callTimeout}
-                        onChange={(e) => setSettings(prev => ({
-                          ...prev,
-                          callCenter: { ...prev.callCenter, callTimeout: parseInt(e.target.value) || 30 }
-                        }))}
+                        onChange={(e) =>
+                          setSettings((prev) => ({
+                            ...prev,
+                            callCenter: {
+                              ...prev.callCenter,
+                              callTimeout: parseInt(e.target.value) || 30,
+                            },
+                          }))
+                        }
                         className="mt-1 max-w-xs"
                       />
                       <p className="text-sm text-gray-500 mt-1">
@@ -338,7 +372,7 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="flex justify-end">
-                      <Button 
+                      <Button
                         onClick={() => handleSave('Call Center')}
                         disabled={isLoading}
                         className="bg-blue-600 hover:bg-blue-700"
@@ -367,38 +401,44 @@ export default function SettingsPage() {
                         id="blandai"
                         type="password"
                         value={settings.system.blandAiApiKey}
-                        onChange={(e) => setSettings(prev => ({
-                          ...prev,
-                          system: { ...prev.system, blandAiApiKey: e.target.value }
-                        }))}
+                        onChange={(e) =>
+                          setSettings((prev) => ({
+                            ...prev,
+                            system: { ...prev.system, blandAiApiKey: e.target.value },
+                          }))
+                        }
                         placeholder="Enter your Bland.ai API key"
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="mongodb">MongoDB URI</Label>
                       <Input
                         id="mongodb"
                         type="password"
                         value={settings.system.mongodbUri}
-                        onChange={(e) => setSettings(prev => ({
-                          ...prev,
-                          system: { ...prev.system, mongodbUri: e.target.value }
-                        }))}
+                        onChange={(e) =>
+                          setSettings((prev) => ({
+                            ...prev,
+                            system: { ...prev.system, mongodbUri: e.target.value },
+                          }))
+                        }
                         placeholder="mongodb+srv://..."
                       />
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="smtp-host">SMTP Host</Label>
                         <Input
                           id="smtp-host"
                           value={settings.system.smtpHost}
-                          onChange={(e) => setSettings(prev => ({
-                            ...prev,
-                            system: { ...prev.system, smtpHost: e.target.value }
-                          }))}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              system: { ...prev.system, smtpHost: e.target.value },
+                            }))
+                          }
                           placeholder="smtp.example.com"
                         />
                       </div>
@@ -408,17 +448,19 @@ export default function SettingsPage() {
                           id="smtp-port"
                           type="number"
                           value={settings.system.smtpPort}
-                          onChange={(e) => setSettings(prev => ({
-                            ...prev,
-                            system: { ...prev.system, smtpPort: parseInt(e.target.value) || 587 }
-                          }))}
+                          onChange={(e) =>
+                            setSettings((prev) => ({
+                              ...prev,
+                              system: { ...prev.system, smtpPort: parseInt(e.target.value) || 587 },
+                            }))
+                          }
                           placeholder="587"
                         />
                       </div>
                     </div>
 
                     <div className="flex justify-end">
-                      <Button 
+                      <Button
                         onClick={() => handleSave('System')}
                         disabled={isLoading}
                         className="bg-blue-600 hover:bg-blue-700"

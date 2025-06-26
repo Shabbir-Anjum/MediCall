@@ -18,7 +18,7 @@ class BlandAiService {
       const response = await fetch(`${this.config.baseUrl}/calls`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.config.apiKey}`,
+          Authorization: `Bearer ${this.config.apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -50,7 +50,7 @@ class BlandAiService {
       const response = await fetch(`${this.config.baseUrl}/sms`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.config.apiKey}`,
+          Authorization: `Bearer ${this.config.apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -70,7 +70,12 @@ class BlandAiService {
     }
   }
 
-  generateMedicationReminderScript(patientName: string, medicationName: string, dosage: string, time: string) {
+  generateMedicationReminderScript(
+    patientName: string,
+    medicationName: string,
+    dosage: string,
+    time: string,
+  ) {
     return `Hello ${patientName}, this is a friendly reminder from your healthcare provider. 
     It's time to take your ${medicationName} medication, ${dosage}. 
     The current time is ${time}. 
@@ -80,7 +85,12 @@ class BlandAiService {
     Thank you and have a great day!`;
   }
 
-  generateAppointmentReminderScript(patientName: string, doctorName: string, appointmentDate: string, appointmentTime: string) {
+  generateAppointmentReminderScript(
+    patientName: string,
+    doctorName: string,
+    appointmentDate: string,
+    appointmentTime: string,
+  ) {
     return `Hello ${patientName}, this is a reminder about your upcoming appointment with Dr. ${doctorName} 
     scheduled for ${appointmentDate} at ${appointmentTime}. 
     Please make sure to arrive 15 minutes early and bring your insurance card and ID. 

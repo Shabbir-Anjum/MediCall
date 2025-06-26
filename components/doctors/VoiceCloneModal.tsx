@@ -42,20 +42,20 @@ export default function VoiceCloneModal({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
-      
+
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          setRecordedChunks(prev => [...prev, event.data]);
+          setRecordedChunks((prev) => [...prev, event.data]);
         }
       };
-      
+
       recorder.onstop = () => {
         const blob = new Blob(recordedChunks, { type: 'audio/wav' });
         const file = new File([blob], `${doctorName}_voice.wav`, { type: 'audio/wav' });
         setAudioFile(file);
         setRecordedChunks([]);
       };
-      
+
       setMediaRecorder(recorder);
       recorder.start();
       setIsRecording(true);
@@ -71,7 +71,7 @@ export default function VoiceCloneModal({
   const stopRecording = () => {
     if (mediaRecorder && isRecording) {
       mediaRecorder.stop();
-      mediaRecorder.stream.getTracks().forEach(track => track.stop());
+      mediaRecorder.stream.getTracks().forEach((track) => track.stop());
       setIsRecording(false);
     }
   };
@@ -88,7 +88,7 @@ export default function VoiceCloneModal({
         });
         return;
       }
-      
+
       // Validate file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
         toast({
@@ -98,7 +98,7 @@ export default function VoiceCloneModal({
         });
         return;
       }
-      
+
       setAudioFile(file);
     }
   };
@@ -114,27 +114,27 @@ export default function VoiceCloneModal({
     }
 
     setIsUploading(true);
-    
+
     try {
       const formData = new FormData();
       formData.append('audio', audioFile);
-      
+
       const response = await fetch(`/api/doctors/${doctorId}/voice-clone`, {
         method: 'POST',
         body: formData,
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to clone voice');
       }
-      
+
       toast({
         title: 'Voice Cloned Successfully',
         description: `Voice has been cloned for Dr. ${doctorName}`,
       });
-      
+
       onSuccess(data.voiceId);
       onClose();
     } catch (error) {
@@ -157,12 +157,15 @@ export default function VoiceCloneModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) {
-        resetModal();
-        onClose();
-      }
-    }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          resetModal();
+          onClose();
+        }
+      }}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Clone Voice for Dr. {doctorName}</DialogTitle>
@@ -170,7 +173,7 @@ export default function VoiceCloneModal({
             Record or upload a clear audio sample (at least 30 seconds) to create a voice clone.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-6">
           {/* Recording Section */}
           <Card>
@@ -181,7 +184,7 @@ export default function VoiceCloneModal({
               <div className="flex items-center justify-center">
                 <Button
                   onClick={isRecording ? stopRecording : startRecording}
-                  variant={isRecording ? "destructive" : "default"}
+                  variant={isRecording ? 'destructive' : 'default'}
                   size="lg"
                   className="w-full"
                 >
@@ -189,7 +192,7 @@ export default function VoiceCloneModal({
                   {isRecording ? 'Stop Recording' : 'Start Recording'}
                 </Button>
               </div>
-              
+
               {isRecording && (
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -235,18 +238,12 @@ export default function VoiceCloneModal({
               className="flex items-center space-x-2 p-3 bg-green-50 rounded-lg"
             >
               <CheckCircle className="h-5 w-5 text-green-600" />
-              <span className="text-sm text-green-800">
-                Audio file ready: {audioFile.name}
-              </span>
+              <span className="text-sm text-green-800">Audio file ready: {audioFile.name}</span>
             </motion.div>
           )}
 
           {/* Submit Button */}
-          <Button
-            onClick={handleSubmit}
-            disabled={!audioFile || isUploading}
-            className="w-full"
-          >
+          <Button onClick={handleSubmit} disabled={!audioFile || isUploading} className="w-full">
             {isUploading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

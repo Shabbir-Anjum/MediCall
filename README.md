@@ -165,7 +165,7 @@ A comprehensive Next.js application for managing hospital call center operations
 const callResult = await blandAiService.makeCall(
   patient.mobileNumber,
   generateMedicationReminderScript(patient.name, medication.name, medication.dosage),
-  patient.name
+  patient.name,
 );
 ```
 
@@ -175,7 +175,7 @@ const callResult = await blandAiService.makeCall(
 // Example: Sending SMS reminder
 const smsResult = await blandAiService.sendSMS(
   patient.mobileNumber,
-  `Hi ${patient.name}, this is a reminder to take your ${medication.name} medication.`
+  `Hi ${patient.name}, this is a reminder to take your ${medication.name} medication.`,
 );
 ```
 

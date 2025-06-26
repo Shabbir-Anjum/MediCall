@@ -29,7 +29,8 @@ export default function HomePage() {
     {
       icon: Users,
       title: 'Patient Management',
-      description: 'Comprehensive patient database with medication schedules and contact information',
+      description:
+        'Comprehensive patient database with medication schedules and contact information',
     },
     {
       icon: Calendar,
@@ -74,8 +75,8 @@ export default function HomePage() {
             <span className="block text-blue-600">Call Center Operations</span>
           </h2>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Automate patient reminders, manage appointments, and track call outcomes
-            with our comprehensive call center management system powered by AI.
+            Automate patient reminders, manage appointments, and track call outcomes with our
+            comprehensive call center management system powered by AI.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button

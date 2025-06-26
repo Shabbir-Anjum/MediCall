@@ -66,7 +66,10 @@ export default function Header({ user }: HeaderProps) {
               <Avatar>
                 <AvatarImage src={user?.avatar} alt={user?.name} />
                 <AvatarFallback>
-                  {user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
+                  {user?.name
+                    ?.split(' ')
+                    .map((n) => n[0])
+                    .join('') || 'U'}
                 </AvatarFallback>
               </Avatar>
             </Button>
@@ -75,9 +78,7 @@ export default function Header({ user }: HeaderProps) {
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">{user?.name}</p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  {user?.email}
-                </p>
+                <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
                 <p className="text-xs leading-none text-muted-foreground capitalize">
                   {user?.role}
                 </p>

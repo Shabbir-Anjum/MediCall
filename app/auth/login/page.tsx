@@ -68,7 +68,7 @@ export default function LoginPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
@@ -151,7 +151,7 @@ export default function LoginPage() {
                     id="remember"
                     checked={formData.rememberMe}
                     onCheckedChange={(checked) =>
-                      setFormData(prev => ({ ...prev, rememberMe: checked as boolean }))
+                      setFormData((prev) => ({ ...prev, rememberMe: checked as boolean }))
                     }
                   />
                   <Label htmlFor="remember" className="text-sm text-gray-600">
@@ -185,38 +185,28 @@ export default function LoginPage() {
 
             {/* Demo Credentials */}
             <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <p className="text-xs text-gray-600 text-center mb-2">Demo Credentials:</p>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Demo Credentials:</h4>
+              <div className="text-xs text-gray-600 space-y-1">
+                <p>
                   <strong>Email:</strong> admin@medicall.com
-                </div>
-                <div>
-                  <strong>Password:</strong> Admin123!
-                </div>
+                </p>
+                <p>
+                  <strong>Password:</strong> admin123
+                </p>
               </div>
             </div>
-            {/* Signup Link */}
+
+            {/* Sign Up Link */}
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
-                Don&apos;t have an account?{' '}
-                <Link
-                  href="/auth/signup"
-                  className="text-blue-600 hover:text-blue-500 font-medium"
-                >
-                  Create Account
+                Don't have an account?{' '}
+                <Link href="/auth/signup" className="text-blue-600 hover:text-blue-500 font-medium">
+                  Sign up here
                 </Link>
               </p>
             </div>
           </CardContent>
         </Card>
-
-        {/* Footer */}
-        <p className="text-center text-sm text-gray-500 mt-8">
-          Need help?{' '}
-          <Link href="/support" className="text-blue-600 hover:text-blue-500">
-            Contact Support
-          </Link>
-        </p>
       </motion.div>
     </div>
   );

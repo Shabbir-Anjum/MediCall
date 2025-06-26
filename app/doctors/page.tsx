@@ -56,7 +56,8 @@ export default function DoctorsPage() {
     name: 'Sarah Johnson',
     email: 'sarah.johnson@medicall.com',
     role: 'senior agent',
-    avatar: 'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150',
+    avatar:
+      'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150',
   });
 
   // Fetch doctors from API
@@ -65,7 +66,7 @@ export default function DoctorsPage() {
       try {
         const response = await fetch('/api/doctors');
         const data = await response.json();
-        
+
         if (response.ok) {
           setDoctors(data.doctors || []);
         } else {
@@ -78,7 +79,7 @@ export default function DoctorsPage() {
           description: 'Failed to load doctors. Using sample data.',
           variant: 'destructive',
         });
-        
+
         // Fallback to mock data
         const mockDoctors: Doctor[] = [
           {
@@ -89,7 +90,8 @@ export default function DoctorsPage() {
             specialty: 'Cardiology',
             department: 'Cardiology',
             availabilityStatus: 'online',
-            avatar: 'https://images.pexels.com/photos/5452293/pexels-photo-5452293.jpeg?auto=compress&cs=tinysrgb&w=150',
+            avatar:
+              'https://images.pexels.com/photos/5452293/pexels-photo-5452293.jpeg?auto=compress&cs=tinysrgb&w=150',
             experience: 12,
             consultationFee: 200,
           },
@@ -101,7 +103,8 @@ export default function DoctorsPage() {
             specialty: 'Neurology',
             department: 'Neurology',
             availabilityStatus: 'online',
-            avatar: 'https://images.pexels.com/photos/6129967/pexels-photo-6129967.jpeg?auto=compress&cs=tinysrgb&w=150',
+            avatar:
+              'https://images.pexels.com/photos/6129967/pexels-photo-6129967.jpeg?auto=compress&cs=tinysrgb&w=150',
             experience: 8,
             consultationFee: 250,
           },
@@ -113,7 +116,8 @@ export default function DoctorsPage() {
             specialty: 'Pediatrics',
             department: 'Pediatrics',
             availabilityStatus: 'offline',
-            avatar: 'https://images.pexels.com/photos/5452201/pexels-photo-5452201.jpeg?auto=compress&cs=tinysrgb&w=150',
+            avatar:
+              'https://images.pexels.com/photos/5452201/pexels-photo-5452201.jpeg?auto=compress&cs=tinysrgb&w=150',
             experience: 15,
             consultationFee: 180,
           },
@@ -138,37 +142,50 @@ export default function DoctorsPage() {
     fetchDoctors();
   }, [toast]);
 
-  const filteredDoctors = doctors.filter(doctor => {
-    const matchesSearch = doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredDoctors = doctors.filter((doctor) => {
+    const matchesSearch =
+      doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSpecialty = specialtyFilter === 'all' || doctor.specialty === specialtyFilter;
     return matchesSearch && matchesSpecialty;
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'online': return 'bg-green-100 text-green-800';
-      case 'offline': return 'bg-gray-100 text-gray-800';
-      case 'on-leave': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'online':
+        return 'bg-green-100 text-green-800';
+      case 'offline':
+        return 'bg-gray-100 text-gray-800';
+      case 'on-leave':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'online': return 'Available';
-      case 'offline': return 'Offline';
-      case 'on-leave': return 'On Leave';
-      default: return status;
+      case 'online':
+        return 'Available';
+      case 'offline':
+        return 'Offline';
+      case 'on-leave':
+        return 'On Leave';
+      default:
+        return status;
     }
   };
 
   const getVoiceStatusColor = (status?: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'failed': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'failed':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -182,22 +199,24 @@ export default function DoctorsPage() {
 
   const handleVoiceCloneSuccess = (voiceId: string) => {
     // Update the doctor in the local state
-    setDoctors(prev => prev.map(doctor => 
-      doctor._id === voiceCloneModal.doctorId 
-        ? { ...doctor, voiceId, voiceCloneStatus: 'completed' as const }
-        : doctor
-    ));
+    setDoctors((prev) =>
+      prev.map((doctor) =>
+        doctor._id === voiceCloneModal.doctorId
+          ? { ...doctor, voiceId, voiceCloneStatus: 'completed' as const }
+          : doctor,
+      ),
+    );
   };
 
-  const specialties = [...new Set(doctors.map(doctor => doctor.specialty))];
+  const specialties = [...new Set(doctors.map((doctor) => doctor.specialty))];
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar />
-      
+
       <div className="flex-1 flex flex-col">
         <Header user={user} />
-        
+
         <main className="flex-1 p-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -210,7 +229,7 @@ export default function DoctorsPage() {
                 <h1 className="text-3xl font-bold text-gray-900">Doctors</h1>
                 <p className="text-gray-600 mt-2">Manage doctor profiles and availability</p>
               </div>
-              <Button 
+              <Button
                 onClick={() => router.push('/doctors/add')}
                 className="bg-blue-600 hover:bg-blue-700"
               >
@@ -245,8 +264,8 @@ export default function DoctorsPage() {
                       <DropdownMenuItem onClick={() => setSpecialtyFilter('all')}>
                         All Specialties
                       </DropdownMenuItem>
-                      {specialties.map(specialty => (
-                        <DropdownMenuItem 
+                      {specialties.map((specialty) => (
+                        <DropdownMenuItem
                           key={specialty}
                           onClick={() => setSpecialtyFilter(specialty)}
                         >
@@ -292,12 +311,17 @@ export default function DoctorsPage() {
                             <Avatar className="h-16 w-16">
                               <AvatarImage src={doctor.avatar} alt={doctor.name} />
                               <AvatarFallback className="text-lg">
-                                {doctor.name.split(' ').map(n => n[0]).join('')}
+                                {doctor.name
+                                  .split(' ')
+                                  .map((n) => n[0])
+                                  .join('')}
                               </AvatarFallback>
                             </Avatar>
                             <div>
                               <h3 className="font-semibold text-gray-900">{doctor.name}</h3>
-                              <p className="text-sm text-blue-600 font-medium">{doctor.specialty}</p>
+                              <p className="text-sm text-blue-600 font-medium">
+                                {doctor.specialty}
+                              </p>
                               <p className="text-xs text-gray-500">{doctor.department}</p>
                             </div>
                           </div>
@@ -322,7 +346,9 @@ export default function DoctorsPage() {
                           {doctor.consultationFee && (
                             <div className="flex justify-between text-sm">
                               <span className="text-gray-500">Fee:</span>
-                              <span className="text-gray-900 font-medium">${doctor.consultationFee}</span>
+                              <span className="text-gray-900 font-medium">
+                                ${doctor.consultationFee}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -345,8 +371,8 @@ export default function DoctorsPage() {
                             <Edit className="h-3 w-3 mr-1" />
                             Edit
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={() => handleVoiceClone(doctor._id, doctor.name)}
                             title="Clone Voice"
@@ -372,10 +398,9 @@ export default function DoctorsPage() {
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No doctors found</h3>
                   <p className="text-gray-500 mb-4">
-                    {searchTerm || specialtyFilter !== 'all' 
+                    {searchTerm || specialtyFilter !== 'all'
                       ? 'Try adjusting your search or filter criteria.'
-                      : 'Get started by adding your first doctor.'
-                    }
+                      : 'Get started by adding your first doctor.'}
                   </p>
                   <Button onClick={() => router.push('/doctors/add')}>
                     <Plus className="h-4 w-4 mr-2" />
@@ -391,7 +416,7 @@ export default function DoctorsPage() {
       {/* Voice Clone Modal */}
       <VoiceCloneModal
         isOpen={voiceCloneModal.isOpen}
-        onClose={() => setVoiceCloneModal(prev => ({ ...prev, isOpen: false }))}
+        onClose={() => setVoiceCloneModal((prev) => ({ ...prev, isOpen: false }))}
         doctorId={voiceCloneModal.doctorId}
         doctorName={voiceCloneModal.doctorName}
         onSuccess={handleVoiceCloneSuccess}
