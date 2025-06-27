@@ -46,9 +46,23 @@ export async function GET(request: NextRequest) {
       .lean();
 
     const response: PatientsListResponse = {
-      patients: patients.map((patient) => ({
-        ...patient,
+      patients: patients.map((patient: any) => ({
         _id: patient._id.toString(),
+        name: patient.name,
+        email: patient.email,
+        mobileNumber: patient.mobileNumber,
+        parentGuardianNumber: patient.parentGuardianNumber,
+        dateOfBirth: patient.dateOfBirth?.toISOString(),
+        address: patient.address,
+        emergencyContact: patient.emergencyContact,
+        medications: patient.medications,
+        reminderPreferences: patient.reminderPreferences,
+        status: patient.status,
+        avatar: patient.avatar,
+        notes: patient.notes,
+        prescriptionImages: patient.prescriptionImages || [],
+        lastReminderSent: patient.lastReminderSent?.toISOString(),
+        nextReminderDue: patient.nextReminderDue?.toISOString(),
         createdBy: {
           _id: patient.createdBy._id.toString(),
           name: patient.createdBy.name,
@@ -56,9 +70,6 @@ export async function GET(request: NextRequest) {
         },
         createdAt: patient.createdAt.toISOString(),
         updatedAt: patient.updatedAt.toISOString(),
-        dateOfBirth: patient.dateOfBirth?.toISOString(),
-        lastReminderSent: patient.lastReminderSent?.toISOString(),
-        nextReminderDue: patient.nextReminderDue?.toISOString(),
       })),
     };
 
@@ -104,8 +115,22 @@ export async function POST(request: NextRequest) {
 
     const response: CreatePatientResponse = {
       patient: {
-        ...patient.toObject(),
         _id: patient._id.toString(),
+        name: patient.name,
+        email: patient.email,
+        mobileNumber: patient.mobileNumber,
+        parentGuardianNumber: patient.parentGuardianNumber,
+        dateOfBirth: patient.dateOfBirth?.toISOString(),
+        address: patient.address,
+        emergencyContact: patient.emergencyContact,
+        medications: patient.medications,
+        reminderPreferences: patient.reminderPreferences,
+        status: patient.status,
+        avatar: patient.avatar,
+        notes: patient.notes,
+        prescriptionImages: patient.prescriptionImages || [],
+        lastReminderSent: patient.lastReminderSent?.toISOString(),
+        nextReminderDue: patient.nextReminderDue?.toISOString(),
         createdBy: {
           _id: patient.createdBy._id.toString(),
           name: patient.createdBy.name,
@@ -113,9 +138,6 @@ export async function POST(request: NextRequest) {
         },
         createdAt: patient.createdAt.toISOString(),
         updatedAt: patient.updatedAt.toISOString(),
-        dateOfBirth: patient.dateOfBirth?.toISOString(),
-        lastReminderSent: patient.lastReminderSent?.toISOString(),
-        nextReminderDue: patient.nextReminderDue?.toISOString(),
       },
     };
 
@@ -124,7 +146,16 @@ export async function POST(request: NextRequest) {
     console.error('Error creating patient:', error);
 
     // Handle duplicate email error
-    if (error.code === 11000 && error.keyPattern?.email) {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      error.code === 11000 &&
+      'keyPattern' in error &&
+      error.keyPattern &&
+      typeof error.keyPattern === 'object' &&
+      'email' in error.keyPattern
+    ) {
       return NextResponse.json(
         { error: 'A patient with this email already exists' },
         { status: 409 },

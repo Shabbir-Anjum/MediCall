@@ -99,7 +99,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     console.error('Error updating patient:', error);
 
     // Handle duplicate email error
-    if (error.code === 11000 && error.keyPattern?.email) {
+    if ((error as any).code === 11000 && (error as any).keyPattern?.email) {
       return NextResponse.json(
         { error: 'A patient with this email already exists' },
         { status: 409 },

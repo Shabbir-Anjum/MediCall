@@ -19,7 +19,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+import { doctorService } from '@/lib/api/doctors';
+import { CreateDoctorData } from '@/types/doctor';
 
 interface AvailabilitySlot {
   id: string;
@@ -36,8 +38,8 @@ interface DoctorFormData {
   department: string;
   licenseNumber: string;
   bio: string;
-  experience: number;
-  consultationFee: number;
+  experience: string;
+  consultationFee: string;
   qualifications: string[];
   availabilitySlots: AvailabilitySlot[];
   profileImage?: File;
@@ -86,7 +88,6 @@ const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Sat
 
 export default function AddDoctorPage() {
   const router = useRouter();
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const [formData, setFormData] = useState<DoctorFormData>({
@@ -97,18 +98,10 @@ export default function AddDoctorPage() {
     department: '',
     licenseNumber: '',
     bio: '',
-    experience: 0,
-    consultationFee: 0,
+    experience: '',
+    consultationFee: '',
     qualifications: [''],
     availabilitySlots: [],
-  });
-
-  const [user] = useState({
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@medicall.com',
-    role: 'senior agent',
-    avatar:
-      'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150',
   });
 
   const addQualification = () => {
@@ -173,20 +166,84 @@ export default function AddDoctorPage() {
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      console.log('Form data:', formData); // Debug log
 
-      toast({
-        title: 'Doctor Added Successfully',
-        description: `Dr. ${formData.name} has been added to the system.`,
+      // Validate required fields
+      if (
+        !formData.name ||
+        !formData.email ||
+        !formData.phoneNumber ||
+        !formData.specialty ||
+        !formData.department ||
+        !formData.licenseNumber ||
+        !formData.experience
+      ) {
+        toast.error('Please fill in all required fields');
+        return;
+      }
+
+      // Filter out empty qualifications
+      const validQualifications = formData.qualifications.filter((q) => q.trim() !== '');
+      if (validQualifications.length === 0) {
+        toast.error('Please add at least one qualification');
+        return;
+      }
+
+      // Prepare data for API
+      const doctorData = {
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phoneNumber: formData.phoneNumber.trim(),
+        specialty: formData.specialty,
+        department: formData.department,
+        licenseNumber: formData.licenseNumber.trim(),
+        bio: formData.bio.trim(),
+        experience: parseInt(formData.experience),
+        qualifications: validQualifications,
+        consultationFee: formData.consultationFee
+          ? parseFloat(formData.consultationFee)
+          : undefined,
+        availabilityStatus: 'offline', // Default status
+        schedule: {}, // Empty schedule for now
+      };
+
+      console.log('Doctor data to send:', doctorData); // Debug log
+
+      // Use direct fetch for debugging
+      const response = await fetch('/api/doctors', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(doctorData),
+      });
+
+      console.log('Response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('API Error:', errorData);
+        throw new Error(errorData.error || 'Failed to create doctor');
+      }
+
+      const newDoctor = await response.json();
+      console.log('Response from API:', newDoctor); // Debug log
+
+      toast.success('Doctor Added Successfully', {
+        description: `Dr. ${newDoctor.doctor.name} has been added to the system.`,
       });
 
       router.push('/dashboard/doctors');
-    } catch (error) {
-      toast({
-        title: 'Failed to Add Doctor',
-        description: 'There was an error adding the doctor. Please try again.',
-        variant: 'destructive',
+    } catch (error: any) {
+      console.error('Error adding doctor:', error);
+      console.error('Error details:', {
+        message: error.message,
+        status: error.status,
+        response: error.response,
+      });
+
+      toast.error('Failed to Add Doctor', {
+        description: error.message || 'There was an error adding the doctor. Please try again.',
       });
     } finally {
       setIsLoading(false);
@@ -323,7 +380,7 @@ export default function AddDoctorPage() {
                         onChange={(e) =>
                           setFormData((prev) => ({
                             ...prev,
-                            experience: parseInt(e.target.value) || 0,
+                            experience: e.target.value,
                           }))
                         }
                         placeholder="10"
@@ -339,7 +396,7 @@ export default function AddDoctorPage() {
                         onChange={(e) =>
                           setFormData((prev) => ({
                             ...prev,
-                            consultationFee: parseInt(e.target.value) || 0,
+                            consultationFee: e.target.value,
                           }))
                         }
                         placeholder="200"

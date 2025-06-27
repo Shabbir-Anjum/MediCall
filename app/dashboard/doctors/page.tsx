@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Plus, Eye, Edit, Calendar, Phone, Mail, Mic } from 'lucide-react';
+import { Search, Filter, Plus, Eye, Edit, Calendar, Phone, Mail, Mic, User } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import VoiceCloneModal from '@/components/doctors/VoiceCloneModal';
@@ -18,30 +18,19 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
-
-interface Doctor {
-  _id: string;
-  name: string;
-  email: string;
-  phoneNumber: string;
-  specialty: string;
-  department: string;
-  availabilityStatus: 'online' | 'offline' | 'on-leave';
-  avatar?: string;
-  experience: number;
-  consultationFee?: number;
-  voiceId?: string;
-  voiceCloneStatus?: 'pending' | 'completed' | 'failed';
-}
+import { toast } from 'sonner';
+import { doctorService } from '@/lib/api/doctors';
+import { DoctorResponse } from '@/types/doctor';
 
 export default function DoctorsPage() {
   const router = useRouter();
-  const { toast } = useToast();
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [doctors, setDoctors] = useState<DoctorResponse[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [specialtyFilter, setSpecialtyFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [voiceCloneModal, setVoiceCloneModal] = useState<{
     isOpen: boolean;
     doctorId: string;
@@ -52,103 +41,32 @@ export default function DoctorsPage() {
     doctorName: '',
   });
 
-  const [user] = useState({
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@medicall.com',
-    role: 'senior agent',
-    avatar:
-      'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150',
-  });
-
   // Fetch doctors from API
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const response = await fetch('/api/doctors');
-        const data = await response.json();
-
-        if (response.ok) {
-          setDoctors(data.doctors || []);
-        } else {
-          throw new Error(data.error || 'Failed to fetch doctors');
-        }
-      } catch (error) {
-        console.error('Error fetching doctors:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load doctors. Using sample data.',
-          variant: 'destructive',
+        setIsLoading(true);
+        const response = await doctorService.getDoctors({
+          search: searchTerm || undefined,
+          specialty: specialtyFilter !== 'all' ? specialtyFilter : undefined,
+          status: statusFilter !== 'all' ? statusFilter : undefined,
+          page: currentPage,
+          limit: 10,
         });
 
-        // Fallback to mock data
-        const mockDoctors: Doctor[] = [
-          {
-            _id: '1',
-            name: 'Dr. Emily Wilson',
-            email: 'emily.wilson@hospital.com',
-            phoneNumber: '+1 (555) 111-2222',
-            specialty: 'Cardiology',
-            department: 'Cardiology',
-            availabilityStatus: 'online',
-            avatar:
-              'https://images.pexels.com/photos/5452293/pexels-photo-5452293.jpeg?auto=compress&cs=tinysrgb&w=150',
-            experience: 12,
-            consultationFee: 200,
-          },
-          {
-            _id: '2',
-            name: 'Dr. Michael Chen',
-            email: 'michael.chen@hospital.com',
-            phoneNumber: '+1 (555) 222-3333',
-            specialty: 'Neurology',
-            department: 'Neurology',
-            availabilityStatus: 'online',
-            avatar:
-              'https://images.pexels.com/photos/6129967/pexels-photo-6129967.jpeg?auto=compress&cs=tinysrgb&w=150',
-            experience: 8,
-            consultationFee: 250,
-          },
-          {
-            _id: '3',
-            name: 'Dr. Sarah Davis',
-            email: 'sarah.davis@hospital.com',
-            phoneNumber: '+1 (555) 333-4444',
-            specialty: 'Pediatrics',
-            department: 'Pediatrics',
-            availabilityStatus: 'offline',
-            avatar:
-              'https://images.pexels.com/photos/5452201/pexels-photo-5452201.jpeg?auto=compress&cs=tinysrgb&w=150',
-            experience: 15,
-            consultationFee: 180,
-          },
-          {
-            _id: '4',
-            name: 'Dr. James Rodriguez',
-            email: 'james.rodriguez@hospital.com',
-            phoneNumber: '+1 (555) 444-5555',
-            specialty: 'Orthopedics',
-            department: 'Orthopedics',
-            availabilityStatus: 'on-leave',
-            experience: 20,
-            consultationFee: 300,
-          },
-        ];
-        setDoctors(mockDoctors);
+        setDoctors(response.doctors);
+        setTotalPages(response.totalPages);
+      } catch (error: any) {
+        console.error('Error fetching doctors:', error);
+        toast.error('Failed to load doctors', { description: error.message });
+        setDoctors([]);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchDoctors();
-  }, [toast]);
-
-  const filteredDoctors = doctors.filter((doctor) => {
-    const matchesSearch =
-      doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSpecialty = specialtyFilter === 'all' || doctor.specialty === specialtyFilter;
-    return matchesSearch && matchesSpecialty;
-  });
+  }, [searchTerm, specialtyFilter, statusFilter, currentPage]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -198,26 +116,33 @@ export default function DoctorsPage() {
   };
 
   const handleVoiceCloneSuccess = (voiceId: string) => {
-    // Update the doctor in the local state
-    setDoctors((prev) =>
-      prev.map((doctor) =>
-        doctor._id === voiceCloneModal.doctorId
-          ? { ...doctor, voiceId, voiceCloneStatus: 'completed' as const }
-          : doctor,
-      ),
-    );
+    setVoiceCloneModal({ isOpen: false, doctorId: '', doctorName: '' });
+    toast.success('Voice clone initiated successfully');
+    // Refresh the doctors list to update voice clone status
+    window.location.reload();
   };
 
-  const specialties = [...new Set(doctors.map((doctor) => doctor.specialty))];
+  const handleVoiceCloneError = (error: string) => {
+    setVoiceCloneModal({ isOpen: false, doctorId: '', doctorName: '' });
+    toast.error('Voice clone failed', { description: error });
+  };
+
+  const specialties = Array.from(new Set(doctors.map((d) => d.specialty)));
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="flex h-screen bg-gray-50">
       {/* <Sidebar /> */}
-
-      <div className="flex-1 flex flex-col">
-        {/* <Header user={user} /> */}
-
-        <main className="flex-1 p-6">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* <Header /> */}
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -227,7 +152,7 @@ export default function DoctorsPage() {
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Doctors</h1>
-                <p className="text-gray-600 mt-2">Manage doctor profiles and availability</p>
+                <p className="text-gray-600">Manage hospital doctors and their availability</p>
               </div>
               <Button
                 onClick={() => router.push('/dashboard/doctors/add')}
@@ -240,77 +165,91 @@ export default function DoctorsPage() {
 
             {/* Filters */}
             <Card className="mb-6">
-              <CardContent className="p-4">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="flex-1">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Search doctors by name or specialty..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder="Search doctors..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline">
-                        <Filter className="h-4 w-4 mr-2" />
-                        Specialty: {specialtyFilter === 'all' ? 'All' : specialtyFilter}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => setSpecialtyFilter('all')}>
-                        All Specialties
-                      </DropdownMenuItem>
+                  <div>
+                    <select
+                      value={specialtyFilter}
+                      onChange={(e) => setSpecialtyFilter(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="all">All Specialties</option>
                       {specialties.map((specialty) => (
-                        <DropdownMenuItem
-                          key={specialty}
-                          onClick={() => setSpecialtyFilter(specialty)}
-                        >
+                        <option key={specialty} value={specialty}>
                           {specialty}
-                        </DropdownMenuItem>
+                        </option>
                       ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    </select>
+                  </div>
+                  <div>
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="online">Available</option>
+                      <option value="offline">Offline</option>
+                      <option value="on-leave">On Leave</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">
+                      {doctors.length} doctor{doctors.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Doctors Grid */}
-            {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[...Array(6)].map((_, i) => (
-                  <Card key={i} className="animate-pulse">
-                    <CardContent className="p-6">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
-                        <div className="flex-1">
-                          <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                          <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+            {doctors.length === 0 ? (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <div className="text-gray-500">
+                    <User className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                    <h3 className="text-lg font-medium mb-2">No doctors found</h3>
+                    <p className="mb-4">
+                      {searchTerm || specialtyFilter !== 'all' || statusFilter !== 'all'
+                        ? 'Try adjusting your search criteria'
+                        : 'Get started by adding your first doctor'}
+                    </p>
+                    <Button
+                      onClick={() => router.push('/dashboard/doctors/add')}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Doctor
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredDoctors.map((doctor, index) => (
+                {doctors.map((doctor) => (
                   <motion.div
                     key={doctor._id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
                   >
-                    <Card className="hover:shadow-lg transition-shadow duration-300">
+                    <Card className="h-full hover:shadow-lg transition-shadow duration-200">
                       <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center space-x-3">
-                            <Avatar className="h-16 w-16">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-12 w-12">
                               <AvatarImage src={doctor.avatar} alt={doctor.name} />
-                              <AvatarFallback className="text-lg">
+                              <AvatarFallback>
                                 {doctor.name
                                   .split(' ')
                                   .map((n) => n[0])
@@ -319,69 +258,75 @@ export default function DoctorsPage() {
                             </Avatar>
                             <div>
                               <h3 className="font-semibold text-gray-900">{doctor.name}</h3>
-                              <p className="text-sm text-blue-600 font-medium">
-                                {doctor.specialty}
-                              </p>
-                              <p className="text-xs text-gray-500">{doctor.department}</p>
+                              <p className="text-sm text-gray-600">{doctor.specialty}</p>
                             </div>
                           </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <span className="sr-only">Open menu</span>
+                                <svg
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                                  />
+                                </svg>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => router.push(`/dashboard/doctors/${doctor._id}`)}
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => router.push(`/dashboard/doctors/${doctor._id}/edit`)}
+                              >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleVoiceClone(doctor._id, doctor.name)}
+                              >
+                                <Mic className="h-4 w-4 mr-2" />
+                                Clone Voice
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Mail className="h-4 w-4" />
+                            <span className="truncate">{doctor.email}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Phone className="h-4 w-4" />
+                            <span>{doctor.phoneNumber}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Calendar className="h-4 w-4" />
+                            <span>{doctor.experience} years experience</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between mt-4 pt-4 border-t">
                           <Badge className={getStatusColor(doctor.availabilityStatus)}>
                             {getStatusText(doctor.availabilityStatus)}
                           </Badge>
-                        </div>
-
-                        <div className="space-y-2 mb-4">
-                          <div className="flex items-center text-sm text-gray-600">
-                            <Mail className="h-4 w-4 mr-2" />
-                            <span className="truncate">{doctor.email}</span>
-                          </div>
-                          <div className="flex items-center text-sm text-gray-600">
-                            <Phone className="h-4 w-4 mr-2" />
-                            <span>{doctor.phoneNumber}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">Experience:</span>
-                            <span className="text-gray-900">{doctor.experience} years</span>
-                          </div>
-                          {doctor.consultationFee && (
-                            <div className="flex justify-between text-sm">
-                              <span className="text-gray-500">Fee:</span>
-                              <span className="text-gray-900 font-medium">
-                                ${doctor.consultationFee}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Voice Clone Status */}
-                        {doctor.voiceCloneStatus && (
-                          <div className="mb-4">
+                          {doctor.voiceCloneStatus && (
                             <Badge className={getVoiceStatusColor(doctor.voiceCloneStatus)}>
-                              Voice: {doctor.voiceCloneStatus}
+                              Voice {doctor.voiceCloneStatus}
                             </Badge>
-                          </div>
-                        )}
-
-                        <div className="flex space-x-2">
-                          <Button size="sm" variant="outline" className="flex-1">
-                            <Eye className="h-3 w-3 mr-1" />
-                            View
-                          </Button>
-                          <Button size="sm" variant="outline" className="flex-1">
-                            <Edit className="h-3 w-3 mr-1" />
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleVoiceClone(doctor._id, doctor.name)}
-                            title="Clone Voice"
-                          >
-                            <Mic className="h-3 w-3" />
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            <Calendar className="h-3 w-3" />
-                          </Button>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -390,24 +335,29 @@ export default function DoctorsPage() {
               </div>
             )}
 
-            {filteredDoctors.length === 0 && !isLoading && (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <div className="text-gray-400 mb-4">
-                    <Search className="h-12 w-12 mx-auto" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No doctors found</h3>
-                  <p className="text-gray-500 mb-4">
-                    {searchTerm || specialtyFilter !== 'all'
-                      ? 'Try adjusting your search or filter criteria.'
-                      : 'Get started by adding your first doctor.'}
-                  </p>
-                  <Button onClick={() => router.push('/dashboard/doctors/add')}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Doctor
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-8">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
                   </Button>
-                </CardContent>
-              </Card>
+                  <span className="px-4 py-2 text-sm text-gray-600">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
             )}
           </motion.div>
         </main>
@@ -416,10 +366,10 @@ export default function DoctorsPage() {
       {/* Voice Clone Modal */}
       <VoiceCloneModal
         isOpen={voiceCloneModal.isOpen}
-        onClose={() => setVoiceCloneModal((prev) => ({ ...prev, isOpen: false }))}
         doctorId={voiceCloneModal.doctorId}
         doctorName={voiceCloneModal.doctorName}
         onSuccess={handleVoiceCloneSuccess}
+        onClose={() => setVoiceCloneModal({ isOpen: false, doctorId: '', doctorName: '' })}
       />
     </div>
   );

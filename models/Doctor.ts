@@ -23,6 +23,7 @@ export interface IDoctor extends Document {
   voiceId?: string; // ElevenLabs voice ID
   voiceCloneStatus?: 'pending' | 'completed' | 'failed';
   isActive: boolean;
+  createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -112,6 +113,11 @@ const DoctorSchema: Schema = new Schema(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
     },
   },
   {
