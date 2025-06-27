@@ -7,9 +7,15 @@ export default withAuth(
     const isAuth = !!token;
     const isAuthPage = req.nextUrl.pathname.startsWith('/auth');
     const isApiAuthRoute = req.nextUrl.pathname.startsWith('/api/auth');
+    const isHomePage = req.nextUrl.pathname === '/';
 
     // Allow API auth routes
     if (isApiAuthRoute) {
+      return null;
+    }
+
+    // Allow home page for everyone
+    if (isHomePage) {
       return null;
     }
 
@@ -39,15 +45,19 @@ export default withAuth(
   {
     callbacks: {
       authorized: ({ token, req }) => {
-        // Allow auth pages and API routes
-        if (req.nextUrl.pathname.startsWith('/auth') || req.nextUrl.pathname.startsWith('/api/auth')) {
+        // Allow auth pages, API routes, and home page
+        if (
+          req.nextUrl.pathname.startsWith('/auth') ||
+          req.nextUrl.pathname.startsWith('/api/auth') ||
+          req.nextUrl.pathname === '/'
+        ) {
           return true;
         }
-        // Require authentication for all other routes
+        // Require authentication for all other routes (dashboard, etc.)
         return !!token;
       },
     },
-  }
+  },
 );
 
 export const config = {

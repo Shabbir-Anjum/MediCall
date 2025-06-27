@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { Plus, Trash2, Save, Clock } from 'lucide-react';
+import { Plus, Trash2, Save, Clock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,40 +11,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
-
-interface Medication {
-  id: string;
-  name: string;
-  dosage: string;
-  times: string[];
-  notes: string;
-}
-
-interface PatientFormData {
-  name: string;
-  email: string;
-  mobileNumber: string;
-  parentGuardianNumber: string;
-  dateOfBirth: string;
-  address: string;
-  emergencyContact: {
-    name: string;
-    relationship: string;
-    phoneNumber: string;
-  };
-  medications: Medication[];
-  reminderPreferences: {
-    sms: boolean;
-    voiceCall: boolean;
-    email: boolean;
-  };
-  notes: string;
-}
+import { toast } from 'sonner';
+import { PatientService } from '@/lib/api/patients';
+import { PatientFormData } from '@/types/patient';
 
 export default function RegisterPatientPage() {
   const router = useRouter();
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const [formData, setFormData] = useState<PatientFormData>({
@@ -68,16 +40,8 @@ export default function RegisterPatientPage() {
     notes: '',
   });
 
-  const [user] = useState({
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@medicall.com',
-    role: 'senior agent',
-    avatar:
-      'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=150',
-  });
-
   const addMedication = () => {
-    const newMedication: Medication = {
+    const newMedication = {
       id: Date.now().toString(),
       name: '',
       dosage: '',
@@ -97,7 +61,11 @@ export default function RegisterPatientPage() {
     }));
   };
 
-  const updateMedication = (id: string, field: keyof Medication, value: any) => {
+  const updateMedication = (
+    id: string,
+    field: keyof (typeof formData.medications)[0],
+    value: any,
+  ) => {
     setFormData((prev) => ({
       ...prev,
       medications: prev.medications.map((med) =>
@@ -129,25 +97,113 @@ export default function RegisterPatientPage() {
     }
   };
 
+  const validateForm = () => {
+    if (!formData.name.trim()) {
+      toast.error('Name Required', {
+        description: "Please enter the patient's full name.",
+      });
+      return false;
+    }
+
+    if (!formData.email.trim()) {
+      toast.error('Email Required', {
+        description: "Please enter the patient's email address.",
+      });
+      return false;
+    }
+
+    if (!formData.email.includes('@')) {
+      toast.error('Invalid Email', {
+        description: 'Please enter a valid email address.',
+      });
+      return false;
+    }
+
+    if (!formData.mobileNumber.trim()) {
+      toast.error('Mobile Number Required', {
+        description: "Please enter the patient's mobile number.",
+      });
+      return false;
+    }
+
+    if (formData.medications.length === 0) {
+      toast.error('Medications Required', {
+        description: 'Please add at least one medication.',
+      });
+      return false;
+    }
+
+    // Validate medications
+    for (const medication of formData.medications) {
+      if (!medication.name.trim()) {
+        toast.error('Medication Name Required', {
+          description: 'Please enter the name for all medications.',
+        });
+        return false;
+      }
+
+      if (!medication.dosage.trim()) {
+        toast.error('Medication Dosage Required', {
+          description: 'Please enter the dosage for all medications.',
+        });
+        return false;
+      }
+
+      if (medication.times.length === 0 || medication.times.every((time) => !time.trim())) {
+        toast.error('Medication Times Required', {
+          description: 'Please enter at least one time for all medications.',
+        });
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await PatientService.createPatient(formData);
 
-      toast({
-        title: 'Patient Registered Successfully',
+      toast.success('Patient Registered Successfully! 🎉', {
         description: `${formData.name} has been added to the system.`,
       });
 
-      router.push('/patients');
+      // Clear form
+      setFormData({
+        name: '',
+        email: '',
+        mobileNumber: '',
+        parentGuardianNumber: '',
+        dateOfBirth: '',
+        address: '',
+        emergencyContact: {
+          name: '',
+          relationship: '',
+          phoneNumber: '',
+        },
+        medications: [],
+        reminderPreferences: {
+          sms: true,
+          voiceCall: true,
+          email: false,
+        },
+        notes: '',
+      });
+
+      // Redirect to patients list
+      router.push('/dashboard/patients');
     } catch (error) {
-      toast({
-        title: 'Registration Failed',
-        description: 'There was an error registering the patient. Please try again.',
-        variant: 'destructive',
+      console.error('Registration error:', error);
+      toast.error('Registration Failed', {
+        description: error instanceof Error ? error.message : 'Please try again.',
       });
     } finally {
       setIsLoading(false);
@@ -156,11 +212,7 @@ export default function RegisterPatientPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* <Sidebar /> */}
-
       <div className="flex-1 flex flex-col">
-        {/* <Header user={user} /> */}
-
         <main className="flex-1 p-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -199,17 +251,15 @@ export default function RegisterPatientPage() {
                         onChange={(e) =>
                           setFormData((prev) => ({ ...prev, email: e.target.value }))
                         }
-                        placeholder="patient@example.com"
+                        placeholder="patient@email.com"
                         required
                       />
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="mobile">Mobile Number *</Label>
+                      <Label htmlFor="mobileNumber">Mobile Number *</Label>
                       <Input
-                        id="mobile"
+                        id="mobileNumber"
+                        type="tel"
                         value={formData.mobileNumber}
                         onChange={(e) =>
                           setFormData((prev) => ({ ...prev, mobileNumber: e.target.value }))
@@ -219,9 +269,10 @@ export default function RegisterPatientPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="guardian">Parent/Guardian Number</Label>
+                      <Label htmlFor="parentGuardianNumber">Parent/Guardian Number</Label>
                       <Input
-                        id="guardian"
+                        id="parentGuardianNumber"
+                        type="tel"
                         value={formData.parentGuardianNumber}
                         onChange={(e) =>
                           setFormData((prev) => ({ ...prev, parentGuardianNumber: e.target.value }))
@@ -229,13 +280,10 @@ export default function RegisterPatientPage() {
                         placeholder="+1 (555) 123-4567"
                       />
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="dob">Date of Birth</Label>
+                      <Label htmlFor="dateOfBirth">Date of Birth</Label>
                       <Input
-                        id="dob"
+                        id="dateOfBirth"
                         type="date"
                         value={formData.dateOfBirth}
                         onChange={(e) =>
@@ -243,7 +291,7 @@ export default function RegisterPatientPage() {
                         }
                       />
                     </div>
-                    <div>
+                    <div className="md:col-span-2">
                       <Label htmlFor="address">Address</Label>
                       <Input
                         id="address"
@@ -251,7 +299,7 @@ export default function RegisterPatientPage() {
                         onChange={(e) =>
                           setFormData((prev) => ({ ...prev, address: e.target.value }))
                         }
-                        placeholder="123 Main St, City, State 12345"
+                        placeholder="Enter patient's address"
                       />
                     </div>
                   </div>
@@ -261,7 +309,7 @@ export default function RegisterPatientPage() {
               {/* Emergency Contact */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Emergency Contact</CardTitle>
+                  <CardTitle>Emergency Contact (Optional)</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -276,13 +324,13 @@ export default function RegisterPatientPage() {
                             emergencyContact: { ...prev.emergencyContact, name: e.target.value },
                           }))
                         }
-                        placeholder="John Doe"
+                        placeholder="Emergency contact name"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="relationship">Relationship</Label>
+                      <Label htmlFor="emergencyRelationship">Relationship</Label>
                       <Input
-                        id="relationship"
+                        id="emergencyRelationship"
                         value={formData.emergencyContact.relationship}
                         onChange={(e) =>
                           setFormData((prev) => ({
@@ -293,13 +341,14 @@ export default function RegisterPatientPage() {
                             },
                           }))
                         }
-                        placeholder="Spouse, Parent, Sibling"
+                        placeholder="Spouse, Parent, etc."
                       />
                     </div>
                     <div>
                       <Label htmlFor="emergencyPhone">Phone Number</Label>
                       <Input
                         id="emergencyPhone"
+                        type="tel"
                         value={formData.emergencyContact.phoneNumber}
                         onChange={(e) =>
                           setFormData((prev) => ({
@@ -317,31 +366,29 @@ export default function RegisterPatientPage() {
                 </CardContent>
               </Card>
 
-              {/* Medication Schedule */}
+              {/* Medications */}
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Medication Schedule</CardTitle>
-                  <Button type="button" onClick={addMedication} size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Medication
-                  </Button>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>Medications *</CardTitle>
+                    <Button type="button" variant="outline" size="sm" onClick={addMedication}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Medication
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {formData.medications.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
-                      <p>No medications added yet.</p>
-                      <p className="text-sm">Click "Add Medication" to get started.</p>
+                      <Clock className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p>No medications added yet</p>
+                      <p className="text-sm">Click "Add Medication" to get started</p>
                     </div>
                   ) : (
                     formData.medications.map((medication, index) => (
-                      <motion.div
-                        key={medication.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="p-4 border border-gray-200 rounded-lg space-y-4"
-                      >
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium text-gray-900">Medication {index + 1}</h4>
+                      <div key={medication.id} className="border rounded-lg p-4 space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h4 className="font-medium">Medication {index + 1}</h4>
                           <Button
                             type="button"
                             variant="ghost"
@@ -352,16 +399,15 @@ export default function RegisterPatientPage() {
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
-
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <Label>Medicine Name *</Label>
+                            <Label>Medication Name *</Label>
                             <Input
                               value={medication.name}
                               onChange={(e) =>
                                 updateMedication(medication.id, 'name', e.target.value)
                               }
-                              placeholder="e.g., Metformin"
+                              placeholder="e.g., Lisinopril"
                               required
                             />
                           </div>
@@ -372,27 +418,23 @@ export default function RegisterPatientPage() {
                               onChange={(e) =>
                                 updateMedication(medication.id, 'dosage', e.target.value)
                               }
-                              placeholder="e.g., 500mg"
+                              placeholder="e.g., 10mg"
                               required
                             />
                           </div>
                         </div>
-
                         <div>
-                          <Label className="flex items-center mb-2">
-                            <Clock className="h-4 w-4 mr-2" />
-                            Time(s) to Take
-                          </Label>
+                          <Label>Times to Take *</Label>
                           <div className="space-y-2">
                             {medication.times.map((time, timeIndex) => (
-                              <div key={timeIndex} className="flex items-center space-x-2">
+                              <div key={timeIndex} className="flex gap-2">
                                 <Input
                                   type="time"
                                   value={time}
                                   onChange={(e) =>
                                     updateMedicationTime(medication.id, timeIndex, e.target.value)
                                   }
-                                  className="flex-1"
+                                  required
                                 />
                                 {medication.times.length > 1 && (
                                   <Button
@@ -418,7 +460,6 @@ export default function RegisterPatientPage() {
                             </Button>
                           </div>
                         </div>
-
                         <div>
                           <Label>Notes</Label>
                           <Textarea
@@ -426,11 +467,11 @@ export default function RegisterPatientPage() {
                             onChange={(e) =>
                               updateMedication(medication.id, 'notes', e.target.value)
                             }
-                            placeholder="Special instructions or notes"
-                            className="resize-none"
+                            placeholder="Any special instructions or notes..."
+                            rows={2}
                           />
                         </div>
-                      </motion.div>
+                      </div>
                     ))
                   )}
                 </CardContent>
@@ -442,61 +483,52 @@ export default function RegisterPatientPage() {
                   <CardTitle>Reminder Preferences</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label>SMS Reminders</Label>
-                        <p className="text-sm text-gray-500">Send text message reminders</p>
-                      </div>
-                      <Switch
-                        checked={formData.reminderPreferences.sms}
-                        onCheckedChange={(checked) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            reminderPreferences: { ...prev.reminderPreferences, sms: checked },
-                          }))
-                        }
-                      />
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>SMS Reminders</Label>
+                      <p className="text-sm text-gray-500">Send text message reminders</p>
                     </div>
-
-                    <Separator />
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label>Voice Call Reminders</Label>
-                        <p className="text-sm text-gray-500">Automated voice call reminders</p>
-                      </div>
-                      <Switch
-                        checked={formData.reminderPreferences.voiceCall}
-                        onCheckedChange={(checked) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            reminderPreferences: {
-                              ...prev.reminderPreferences,
-                              voiceCall: checked,
-                            },
-                          }))
-                        }
-                      />
+                    <Switch
+                      checked={formData.reminderPreferences.sms}
+                      onCheckedChange={(checked) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          reminderPreferences: { ...prev.reminderPreferences, sms: checked },
+                        }))
+                      }
+                    />
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Voice Call Reminders</Label>
+                      <p className="text-sm text-gray-500">Make automated phone calls</p>
                     </div>
-
-                    <Separator />
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label>Email Reminders</Label>
-                        <p className="text-sm text-gray-500">Send email notifications</p>
-                      </div>
-                      <Switch
-                        checked={formData.reminderPreferences.email}
-                        onCheckedChange={(checked) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            reminderPreferences: { ...prev.reminderPreferences, email: checked },
-                          }))
-                        }
-                      />
+                    <Switch
+                      checked={formData.reminderPreferences.voiceCall}
+                      onCheckedChange={(checked) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          reminderPreferences: { ...prev.reminderPreferences, voiceCall: checked },
+                        }))
+                      }
+                    />
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Email Reminders</Label>
+                      <p className="text-sm text-gray-500">Send email notifications</p>
                     </div>
+                    <Switch
+                      checked={formData.reminderPreferences.email}
+                      onCheckedChange={(checked) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          reminderPreferences: { ...prev.reminderPreferences, email: checked },
+                        }))
+                      }
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -510,19 +542,18 @@ export default function RegisterPatientPage() {
                   <Textarea
                     value={formData.notes}
                     onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
-                    placeholder="Any special instructions, allergies, or important information..."
-                    className="min-h-[100px] resize-none"
+                    placeholder="Any additional notes about the patient..."
+                    rows={4}
                   />
                 </CardContent>
               </Card>
 
-              {/* Submit Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-end">
+              {/* Submit Button */}
+              <div className="flex justify-end space-x-4">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => router.push('/patients')}
-                  disabled={isLoading}
+                  onClick={() => router.push('/dashboard/patients')}
                 >
                   Cancel
                 </Button>
@@ -533,8 +564,8 @@ export default function RegisterPatientPage() {
                 >
                   {isLoading ? (
                     <>
-                      <Save className="mr-2 h-4 w-4 animate-spin" />
-                      Registering...
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Registering Patient...
                     </>
                   ) : (
                     <>

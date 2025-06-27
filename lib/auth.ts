@@ -10,7 +10,7 @@ export const authOptions: NextAuthOptions = {
       name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' }
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -47,9 +47,14 @@ export const authOptions: NextAuthOptions = {
           console.error('Auth error:', error);
           return null;
         }
-      }
-    })
+      },
+    }),
   ],
+  pages: {
+    signIn: '/auth/login',
+    signUp: '/auth/signup',
+    error: '/auth/login',
+  },
   session: {
     strategy: 'jwt',
     maxAge: 24 * 60 * 60, // 24 hours

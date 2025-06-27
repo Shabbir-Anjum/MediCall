@@ -2,7 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Plus, Eye, Edit, Pause, Play, Download, User } from 'lucide-react';
+import {
+  Search,
+  Filter,
+  Plus,
+  Eye,
+  Edit,
+  Pause,
+  Play,
+  Download,
+  User,
+  Loader2,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,90 +26,78 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
-
-interface Patient {
-  id: string;
-  name: string;
-  email: string;
-  mobileNumber: string;
-  status: 'active' | 'paused' | 'completed';
-  nextReminderDue: string;
-  medicationsCount: number;
-  avatar?: string;
-  lastReminderSent?: string;
-}
+import { toast } from 'sonner';
+import { PatientService } from '@/lib/api/patients';
+import { PatientResponse } from '@/types/patient';
 
 export default function PatientsPage() {
   const router = useRouter();
-  const [patients, setPatients] = useState<Patient[]>([]);
+  const [patients, setPatients] = useState<PatientResponse[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Mock data - replace with API call
-  useEffect(() => {
-    const mockPatients: Patient[] = [
-      {
-        id: '1',
-        name: 'John Doe',
-        email: 'john.doe@email.com',
-        mobileNumber: '+1 (555) 123-4567',
-        status: 'active',
-        nextReminderDue: '2024-01-15 09:00 AM',
-        medicationsCount: 3,
-        avatar:
-          'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150',
-        lastReminderSent: '2024-01-14 09:00 AM',
-      },
-      {
-        id: '2',
-        name: 'Mary Smith',
-        email: 'mary.smith@email.com',
-        mobileNumber: '+1 (555) 234-5678',
-        status: 'active',
-        nextReminderDue: '2024-01-15 02:00 PM',
-        medicationsCount: 2,
-        avatar:
-          'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150',
-        lastReminderSent: '2024-01-14 02:00 PM',
-      },
-      {
-        id: '3',
-        name: 'Robert Brown',
-        email: 'robert.brown@email.com',
-        mobileNumber: '+1 (555) 345-6789',
-        status: 'paused',
-        nextReminderDue: 'Paused',
-        medicationsCount: 1,
-        lastReminderSent: '2024-01-10 10:00 AM',
-      },
-      {
-        id: '4',
-        name: 'Lisa Garcia',
-        email: 'lisa.garcia@email.com',
-        mobileNumber: '+1 (555) 456-7890',
-        status: 'completed',
-        nextReminderDue: 'Treatment Complete',
-        medicationsCount: 0,
-        avatar:
-          'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=150',
-        lastReminderSent: '2024-01-12 08:00 AM',
-      },
-    ];
+  // Fetch patients from API
+  const fetchPatients = async () => {
+    try {
+      const params: { status?: string; search?: string } = {};
 
-    setTimeout(() => {
-      setPatients(mockPatients);
+      if (statusFilter !== 'all') {
+        params.status = statusFilter;
+      }
+
+      if (searchTerm.trim()) {
+        params.search = searchTerm.trim();
+      }
+
+      const response = await PatientService.getPatients(params);
+      setPatients(response.patients);
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+      toast.error('Failed to fetch patients', {
+        description: error instanceof Error ? error.message : 'Please try again later.',
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+      setIsRefreshing(false);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    fetchPatients();
   }, []);
 
-  const filteredPatients = patients.filter((patient) => {
-    const matchesSearch =
-      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || patient.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  // Refresh when filters change
+  useEffect(() => {
+    if (!isLoading) {
+      setIsRefreshing(true);
+      fetchPatients();
+    }
+  }, [searchTerm, statusFilter]);
+
+  const handleStatusChange = async (
+    patientId: string,
+    newStatus: 'active' | 'paused' | 'completed',
+  ) => {
+    try {
+      await PatientService.updatePatientStatus(patientId, newStatus);
+      toast.success('Patient status updated successfully');
+
+      // Update local state
+      setPatients((prev) =>
+        prev.map((patient) =>
+          patient._id === patientId ? { ...patient, status: newStatus } : patient,
+        ),
+      );
+    } catch (error) {
+      console.error('Error updating patient status:', error);
+      toast.error('Failed to update patient status', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -113,6 +112,20 @@ export default function PatientsPage() {
     }
   };
 
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Not set';
+    return new Date(dateString).toLocaleString();
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((word) => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -123,7 +136,9 @@ export default function PatientsPage() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Patients</h1>
-          <p className="text-gray-600 mt-2">Manage patient records and medication schedules</p>
+          <p className="text-gray-600 mt-2">
+            Manage patient records and medication schedules ({patients.length} patients)
+          </p>
         </div>
         <Button
           onClick={() => router.push('/dashboard/patients/register')}
@@ -142,7 +157,7 @@ export default function PatientsPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Search patients by name or email..."
+                  placeholder="Search patients by name, email, or phone..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -171,9 +186,13 @@ export default function PatientsPage() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export CSV
+            <Button variant="outline" onClick={() => fetchPatients()} disabled={isRefreshing}>
+              {isRefreshing ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4 mr-2" />
+              )}
+              Refresh
             </Button>
           </div>
         </CardContent>
@@ -196,26 +215,44 @@ export default function PatientsPage() {
             </Card>
           ))}
         </div>
+      ) : patients.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No patients found</h3>
+            <p className="text-gray-600 mb-4">
+              {searchTerm || statusFilter !== 'all'
+                ? 'Try adjusting your search or filter criteria.'
+                : 'Get started by registering your first patient.'}
+            </p>
+            {!searchTerm && statusFilter === 'all' && (
+              <Button
+                onClick={() => router.push('/dashboard/patients/register')}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Register First Patient
+              </Button>
+            )}
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPatients.map((patient, index) => (
+          {patients.map((patient) => (
             <motion.div
-              key={patient.id}
+              key={patient._id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
+              transition={{ duration: 0.3 }}
             >
-              <Card className="hover:shadow-lg transition-shadow duration-300">
+              <Card className="hover:shadow-lg transition-shadow duration-200">
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center space-x-3">
-                      <Avatar>
-                        <AvatarImage src={patient.avatar} alt={patient.name} />
-                        <AvatarFallback>
-                          {patient.name
-                            .split(' ')
-                            .map((n) => n[0])
-                            .join('')}
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={patient.avatar} />
+                        <AvatarFallback className="bg-blue-100 text-blue-600">
+                          {getInitials(patient.name)}
                         </AvatarFallback>
                       </Avatar>
                       <div>
@@ -223,76 +260,92 @@ export default function PatientsPage() {
                         <p className="text-sm text-gray-500">{patient.email}</p>
                       </div>
                     </div>
-                    <Badge className={getStatusColor(patient.status)}>{patient.status}</Badge>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => router.push(`/dashboard/patients/${patient._id}`)}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => router.push(`/dashboard/patients/${patient._id}/edit`)}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Patient
+                        </DropdownMenuItem>
+                        {patient.status === 'active' && (
+                          <DropdownMenuItem
+                            onClick={() => handleStatusChange(patient._id, 'paused')}
+                          >
+                            <Pause className="h-4 w-4 mr-2" />
+                            Pause Reminders
+                          </DropdownMenuItem>
+                        )}
+                        {patient.status === 'paused' && (
+                          <DropdownMenuItem
+                            onClick={() => handleStatusChange(patient._id, 'active')}
+                          >
+                            <Play className="h-4 w-4 mr-2" />
+                            Resume Reminders
+                          </DropdownMenuItem>
+                        )}
+                        {patient.status !== 'completed' && (
+                          <DropdownMenuItem
+                            onClick={() => handleStatusChange(patient._id, 'completed')}
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Mark Complete
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
 
-                  <div className="space-y-2 mb-4">
+                  <div className="space-y-3">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Phone:</span>
                       <span className="text-gray-900">{patient.mobileNumber}</span>
                     </div>
+
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Medications:</span>
-                      <span className="text-gray-900">{patient.medicationsCount}</span>
+                      <span className="text-gray-900">{patient.medications.length}</span>
                     </div>
+
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Last Reminder:</span>
+                      <span className="text-gray-900">{formatDate(patient.lastReminderSent)}</span>
+                    </div>
+
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Next Reminder:</span>
-                      <span className="text-gray-900 text-xs">{patient.nextReminderDue}</span>
+                      <span className="text-gray-900">
+                        {patient.status === 'active'
+                          ? formatDate(patient.nextReminderDue)
+                          : patient.status === 'paused'
+                            ? 'Paused'
+                            : 'Completed'}
+                      </span>
                     </div>
-                    {patient.lastReminderSent && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Last Sent:</span>
-                        <span className="text-gray-900 text-xs">{patient.lastReminderSent}</span>
-                      </div>
-                    )}
-                  </div>
 
-                  <div className="flex space-x-2">
-                    <Button size="sm" variant="outline" className="flex-1">
-                      <Eye className="h-3 w-3 mr-1" />
-                      View
-                    </Button>
-                    <Button size="sm" variant="outline" className="flex-1">
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className={patient.status === 'active' ? 'text-yellow-600' : 'text-green-600'}
-                    >
-                      {patient.status === 'active' ? (
-                        <Pause className="h-3 w-3" />
-                      ) : (
-                        <Play className="h-3 w-3" />
-                      )}
-                    </Button>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-500 text-sm">Status:</span>
+                      <Badge className={getStatusColor(patient.status)}>
+                        {patient.status.charAt(0).toUpperCase() + patient.status.slice(1)}
+                      </Badge>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
           ))}
         </div>
-      )}
-
-      {filteredPatients.length === 0 && !isLoading && (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <div className="text-gray-400 mb-4">
-              <User className="h-12 w-12 mx-auto" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No patients found</h3>
-            <p className="text-gray-500 mb-4">
-              {searchTerm || statusFilter !== 'all'
-                ? 'Try adjusting your search or filter criteria.'
-                : 'Get started by registering your first patient.'}
-            </p>
-            <Button onClick={() => router.push('/dashboard/patients/register')}>
-              <Plus className="h-4 w-4 mr-2" />
-              Register Patient
-            </Button>
-          </CardContent>
-        </Card>
       )}
     </motion.div>
   );

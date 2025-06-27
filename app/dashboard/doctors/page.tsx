@@ -212,10 +212,10 @@ export default function DoctorsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar />
+      {/* <Sidebar /> */}
 
       <div className="flex-1 flex flex-col">
-        <Header user={user} />
+        {/* <Header user={user} /> */}
 
         <main className="flex-1 p-6">
           <motion.div
@@ -230,7 +230,7 @@ export default function DoctorsPage() {
                 <p className="text-gray-600 mt-2">Manage doctor profiles and availability</p>
               </div>
               <Button
-                onClick={() => router.push('/doctors/add')}
+                onClick={() => router.push('/dashboard/doctors/add')}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -402,7 +402,7 @@ export default function DoctorsPage() {
                       ? 'Try adjusting your search or filter criteria.'
                       : 'Get started by adding your first doctor.'}
                   </p>
-                  <Button onClick={() => router.push('/doctors/add')}>
+                  <Button onClick={() => router.push('/dashboard/doctors/add')}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Doctor
                   </Button>

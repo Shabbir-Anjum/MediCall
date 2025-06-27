@@ -1,9 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
 import Patient from '@/models/Patient';
+import {
+  PatientSchema,
+  PatientsListResponse,
+  CreatePatientResponse,
+  ApiError,
+} from '@/types/patient';
 
 export async function GET(request: NextRequest) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     await dbConnect();
 
     const { searchParams } = new URL(request.url);
@@ -12,47 +26,112 @@ export async function GET(request: NextRequest) {
 
     let query: any = {};
 
+    // Filter by status
     if (status && status !== 'all') {
       query.status = status;
     }
 
+    // Search functionality
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } },
+        { mobileNumber: { $regex: search, $options: 'i' } },
       ];
     }
 
     const patients = await Patient.find(query)
       .populate('createdBy', 'name email')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
-    return NextResponse.json({ patients });
+    const response: PatientsListResponse = {
+      patients: patients.map((patient) => ({
+        ...patient,
+        _id: patient._id.toString(),
+        createdBy: {
+          _id: patient.createdBy._id.toString(),
+          name: patient.createdBy.name,
+          email: patient.createdBy.email,
+        },
+        createdAt: patient.createdAt.toISOString(),
+        updatedAt: patient.updatedAt.toISOString(),
+        dateOfBirth: patient.dateOfBirth?.toISOString(),
+        lastReminderSent: patient.lastReminderSent?.toISOString(),
+        nextReminderDue: patient.nextReminderDue?.toISOString(),
+      })),
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error fetching patients:', error);
-    return NextResponse.json({ error: 'Failed to fetch patients' }, { status: 500 });
+    const errorResponse: ApiError = { error: 'Failed to fetch patients' };
+    return NextResponse.json(errorResponse, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     await dbConnect();
 
     const body = await request.json();
 
-    // In a real app, you'd get the user ID from the session
-    const createdBy = '507f1f77bcf86cd799439011'; // Mock user ID
+    // Validate input data
+    const validationResult = PatientSchema.safeParse(body);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: validationResult.error.errors },
+        { status: 400 },
+      );
+    }
 
+    // Create patient with validated data
     const patient = new Patient({
-      ...body,
-      createdBy,
+      ...validationResult.data,
+      createdBy: session.user.id,
     });
 
     await patient.save();
 
-    return NextResponse.json({ patient }, { status: 201 });
+    // Populate createdBy field
+    await patient.populate('createdBy', 'name email');
+
+    const response: CreatePatientResponse = {
+      patient: {
+        ...patient.toObject(),
+        _id: patient._id.toString(),
+        createdBy: {
+          _id: patient.createdBy._id.toString(),
+          name: patient.createdBy.name,
+          email: patient.createdBy.email,
+        },
+        createdAt: patient.createdAt.toISOString(),
+        updatedAt: patient.updatedAt.toISOString(),
+        dateOfBirth: patient.dateOfBirth?.toISOString(),
+        lastReminderSent: patient.lastReminderSent?.toISOString(),
+        nextReminderDue: patient.nextReminderDue?.toISOString(),
+      },
+    };
+
+    return NextResponse.json(response, { status: 201 });
   } catch (error) {
     console.error('Error creating patient:', error);
-    return NextResponse.json({ error: 'Failed to create patient' }, { status: 500 });
+
+    // Handle duplicate email error
+    if (error.code === 11000 && error.keyPattern?.email) {
+      return NextResponse.json(
+        { error: 'A patient with this email already exists' },
+        { status: 409 },
+      );
+    }
+
+    const errorResponse: ApiError = { error: 'Failed to create patient' };
+    return NextResponse.json(errorResponse, { status: 500 });
   }
 }

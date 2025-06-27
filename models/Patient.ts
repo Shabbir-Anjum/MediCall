@@ -5,6 +5,14 @@ export interface IMedication {
   dosage: string;
   times: string[];
   notes?: string;
+  prescribingDoctor?: string;
+  pharmacy?: string;
+  prescriptionNumber?: string;
+  refillDate?: Date;
+  sideEffects?: string[];
+  drugInteractions?: string[];
+  instructions?: string;
+  isActive: boolean;
 }
 
 export interface IPatient extends Document {
@@ -31,6 +39,18 @@ export interface IPatient extends Document {
   prescriptionImages: string[]; // Array of image file paths
   lastReminderSent?: Date;
   nextReminderDue?: Date;
+  allergies?: string[];
+  medicalHistory?: string;
+  insuranceInfo?: {
+    provider: string;
+    policyNumber: string;
+    groupNumber?: string;
+  };
+  primaryCarePhysician?: {
+    name: string;
+    phone: string;
+    email?: string;
+  };
   createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -56,6 +76,41 @@ const MedicationSchema = new Schema({
   notes: {
     type: String,
     trim: true,
+  },
+  prescribingDoctor: {
+    type: String,
+    trim: true,
+  },
+  pharmacy: {
+    type: String,
+    trim: true,
+  },
+  prescriptionNumber: {
+    type: String,
+    trim: true,
+  },
+  refillDate: {
+    type: Date,
+  },
+  sideEffects: [
+    {
+      type: String,
+      trim: true,
+    },
+  ],
+  drugInteractions: [
+    {
+      type: String,
+      trim: true,
+    },
+  ],
+  instructions: {
+    type: String,
+    trim: true,
+  },
+  isActive: {
+    type: Boolean,
+    default: true,
   },
 });
 
@@ -141,6 +196,44 @@ const PatientSchema: Schema = new Schema(
     },
     nextReminderDue: {
       type: Date,
+    },
+    allergies: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    medicalHistory: {
+      type: String,
+      trim: true,
+    },
+    insuranceInfo: {
+      provider: {
+        type: String,
+        trim: true,
+      },
+      policyNumber: {
+        type: String,
+        trim: true,
+      },
+      groupNumber: {
+        type: String,
+        trim: true,
+      },
+    },
+    primaryCarePhysician: {
+      name: {
+        type: String,
+        trim: true,
+      },
+      phone: {
+        type: String,
+        trim: true,
+      },
+      email: {
+        type: String,
+        trim: true,
+      },
     },
     createdBy: {
       type: Schema.Types.ObjectId,

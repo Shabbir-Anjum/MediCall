@@ -65,13 +65,13 @@ export default function Sidebar({ isCollapsed = false, onToggle }: SidebarProps)
   const handleLogout = async () => {
     try {
       await signOut({
-        callbackUrl: '/',
+        callbackUrl: '/auth/login',
         redirect: true,
       });
     } catch (error) {
       console.error('Logout error:', error);
       // Fallback redirect
-      router.push('/');
+      router.push('/auth/login');
     }
   };
 

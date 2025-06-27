@@ -181,7 +181,7 @@ export default function AddDoctorPage() {
         description: `Dr. ${formData.name} has been added to the system.`,
       });
 
-      router.push('/doctors');
+      router.push('/dashboard/doctors');
     } catch (error) {
       toast({
         title: 'Failed to Add Doctor',
@@ -195,10 +195,10 @@ export default function AddDoctorPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar />
+      {/* <Sidebar /> */}
 
       <div className="flex-1 flex flex-col">
-        <Header user={user} />
+        {/* <Header user={user} /> */}
 
         <main className="flex-1 p-6">
           <motion.div

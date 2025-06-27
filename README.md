@@ -34,6 +34,71 @@ A comprehensive Next.js application for managing hospital call center operations
 - **Animations**: Framer Motion
 - **File Upload**: Built-in file handling system
 
+## Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    participant Agent as 🏥 Agent
+    participant Dashboard as �� MediCall Dashboard
+    participant DB as 🗄️ MongoDB
+    participant BlandAI as 🤖 Bland.ai API
+    participant Patient as 👤 Patient
+    participant Doctor as 👨‍⚕️ Doctor
+
+    Note over Agent,Doctor: Phase 1: Patient Registration & Setup
+    Agent->>Dashboard: 1. Login to system
+    Agent->>Dashboard: 2. Register new patient
+    Dashboard->>DB: 3. Save patient data
+    DB-->>Dashboard: 4. Patient saved confirmation
+    Dashboard-->>Agent: 5. Patient registered successfully
+
+    Note over Agent,Doctor: Phase 2: Call Scheduling & Execution
+    Agent->>Dashboard: 6. Schedule medication call
+    Dashboard->>DB: 7. Create call log entry
+    DB-->>Dashboard: 8. Call log created
+    Dashboard->>Dashboard: 9. Generate personalized call script
+    Dashboard->>BlandAI: 10. Make AI call request
+    BlandAI->>Patient: 11. Call patient phone
+    Patient->>BlandAI: 12. Patient answers/responds
+    BlandAI->>BlandAI: 13. Process call completion
+
+    Note over Agent,Doctor: Phase 3: Call Result Processing
+    BlandAI->>Dashboard: 14. Webhook: Send call results
+    Dashboard->>DB: 15. Update call log with results
+    DB-->>Dashboard: 16. Call log updated
+    Agent->>Dashboard: 17. View call results
+    Dashboard->>DB: 18. Fetch call logs
+    DB-->>Dashboard: 19. Return call history
+    Dashboard-->>Agent: 20. Display call outcomes
+
+    Note over Agent,Doctor: Phase 4: Doctor Coordination
+    Agent->>Dashboard: 21. Assign follow-up to doctor
+    Dashboard->>DB: 22. Create doctor task
+    DB-->>Dashboard: 23. Task saved
+    Dashboard->>Doctor: 24. Send notification
+    Doctor->>Dashboard: 25. Review patient case
+    Doctor->>Dashboard: 26. Provide medical recommendations
+    Agent->>Dashboard: 27. View doctor response
+    Dashboard->>DB: 28. Fetch doctor actions
+    DB-->>Dashboard: 29. Return doctor recommendations
+    Dashboard-->>Agent: 30. Display doctor actions
+
+    Note over Agent,Doctor: Automated Workflows
+    loop Scheduled Calls
+        Dashboard->>BlandAI: Auto: Trigger medication call
+        BlandAI->>Patient: Auto: Make scheduled call
+        BlandAI->>Dashboard: Auto: Send results via webhook
+    end
+
+    Note over Agent,Doctor: Emergency Handling
+    alt Emergency Detected
+        BlandAI->>Dashboard: �� Emergency keywords detected
+        Dashboard->>DB: Log emergency alert
+        Dashboard->>Doctor: 🚨 Immediate doctor notification
+        Doctor->>Dashboard: Emergency response
+    end
+```
+
 ## 📦 Installation
 
 1. **Clone the repository**
