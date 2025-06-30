@@ -4,6 +4,7 @@ import {
   CreatePatientResponse,
   ApiError,
   PatientFormData,
+  FormPatientSchema,
 } from '@/types/patient';
 
 const API_BASE_URL = '/api/patients';
@@ -39,29 +40,41 @@ export class PatientService {
   }
 
   static async createPatient(data: PatientFormData): Promise<CreatePatientResponse> {
+    // First validate the form data
+    const validationResult = FormPatientSchema.safeParse(data);
+    if (!validationResult.success) {
+      throw new Error(
+        `Validation failed: ${validationResult.error.errors.map((e) => e.message).join(', ')}`,
+      );
+    }
+
     // Transform form data to API format
     const apiData = {
-      name: data.name,
-      email: data.email,
-      mobileNumber: data.mobileNumber,
-      parentGuardianNumber: data.parentGuardianNumber || undefined,
-      dateOfBirth: data.dateOfBirth || undefined,
-      address: data.address || undefined,
-      emergencyContact: data.emergencyContact.name
-        ? {
-            name: data.emergencyContact.name,
-            relationship: data.emergencyContact.relationship,
-            phoneNumber: data.emergencyContact.phoneNumber,
-          }
-        : undefined,
+      name: data.name.trim(),
+      email: data.email.trim().toLowerCase(),
+      mobileNumber: data.mobileNumber.trim(),
+      parentGuardianNumber: data.parentGuardianNumber?.trim() || undefined,
+      dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : undefined,
+      address: data.address?.trim() || undefined,
+      emergencyContact:
+        data.emergencyContact.name &&
+        data.emergencyContact.relationship &&
+        data.emergencyContact.phoneNumber
+          ? {
+              name: data.emergencyContact.name.trim(),
+              relationship: data.emergencyContact.relationship.trim(),
+              phoneNumber: data.emergencyContact.phoneNumber.trim(),
+            }
+          : undefined,
       medications: data.medications.map((med) => ({
-        name: med.name,
-        dosage: med.dosage,
+        name: med.name.trim(),
+        dosage: med.dosage.trim(),
         times: med.times.filter((time) => time.trim() !== ''),
-        notes: med.notes || undefined,
+        notes: med.notes?.trim() || undefined,
+        isActive: true,
       })),
       reminderPreferences: data.reminderPreferences,
-      notes: data.notes || undefined,
+      notes: data.notes?.trim() || undefined,
     };
 
     const response = await fetch(API_BASE_URL, {

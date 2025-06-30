@@ -16,10 +16,26 @@ export const MedicationSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
+// Form medication schema (includes id for UI)
+export const FormMedicationSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1, 'Medication name is required'),
+  dosage: z.string().min(1, 'Dosage is required'),
+  times: z.array(z.string()).min(1, 'At least one time is required'),
+  notes: z.string().optional(),
+});
+
 export const EmergencyContactSchema = z.object({
   name: z.string().min(1, 'Emergency contact name is required'),
   relationship: z.string().min(1, 'Relationship is required'),
   phoneNumber: z.string().min(1, 'Phone number is required'),
+});
+
+// Form emergency contact schema (all fields optional)
+export const FormEmergencyContactSchema = z.object({
+  name: z.string().optional(),
+  relationship: z.string().optional(),
+  phoneNumber: z.string().optional(),
 });
 
 export const InsuranceInfoSchema = z.object({
@@ -40,6 +56,7 @@ export const ReminderPreferencesSchema = z.object({
   email: z.boolean(),
 });
 
+// API Patient Schema (for database)
 export const PatientSchema = z.object({
   name: z.string().min(1, 'Patient name is required'),
   email: z.string().email('Invalid email address'),
@@ -62,13 +79,30 @@ export const PatientSchema = z.object({
   primaryCarePhysician: PrimaryCarePhysicianSchema.optional(),
 });
 
+// Form Patient Schema (for form validation)
+export const FormPatientSchema = z.object({
+  name: z.string().min(1, 'Patient name is required'),
+  email: z.string().email('Invalid email address'),
+  mobileNumber: z.string().min(10, 'Valid mobile number is required'),
+  parentGuardianNumber: z.string().optional(),
+  dateOfBirth: z.string().optional(), // String for form input
+  address: z.string().optional(),
+  emergencyContact: FormEmergencyContactSchema,
+  medications: z.array(FormMedicationSchema),
+  reminderPreferences: ReminderPreferencesSchema,
+  notes: z.string().optional(),
+});
+
 // TypeScript types
 export type Medication = z.infer<typeof MedicationSchema>;
+export type FormMedication = z.infer<typeof FormMedicationSchema>;
 export type EmergencyContact = z.infer<typeof EmergencyContactSchema>;
+export type FormEmergencyContact = z.infer<typeof FormEmergencyContactSchema>;
 export type InsuranceInfo = z.infer<typeof InsuranceInfoSchema>;
 export type PrimaryCarePhysician = z.infer<typeof PrimaryCarePhysicianSchema>;
 export type ReminderPreferences = z.infer<typeof ReminderPreferencesSchema>;
 export type Patient = z.infer<typeof PatientSchema>;
+export type FormPatient = z.infer<typeof FormPatientSchema>;
 export type CreatePatientData = z.infer<typeof PatientSchema>;
 
 // API Response types
@@ -108,6 +142,7 @@ export interface CreatePatientResponse {
 
 export interface ApiError {
   error: string;
+  details?: any;
 }
 
 // UI Component types

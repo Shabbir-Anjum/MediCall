@@ -96,8 +96,15 @@ export async function POST(request: NextRequest) {
     // Validate input data
     const validationResult = PatientSchema.safeParse(body);
     if (!validationResult.success) {
+      console.error('Validation errors:', validationResult.error.errors);
       return NextResponse.json(
-        { error: 'Invalid data', details: validationResult.error.errors },
+        {
+          error: 'Invalid data',
+          details: validationResult.error.errors.map((err) => ({
+            field: err.path.join('.'),
+            message: err.message,
+          })),
+        },
         { status: 400 },
       );
     }
@@ -159,6 +166,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'A patient with this email already exists' },
         { status: 409 },
+      );
+    }
+
+    // Handle validation errors from Mongoose
+    if (error && typeof error === 'object' && 'name' in error && error.name === 'ValidationError') {
+      const validationErrors = Object.values((error as any).errors).map((err: any) => ({
+        field: err.path,
+        message: err.message,
+      }));
+
+      return NextResponse.json(
+        { error: 'Validation failed', details: validationErrors },
+        { status: 400 },
       );
     }
 
