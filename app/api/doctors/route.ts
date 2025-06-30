@@ -63,10 +63,10 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
-    // const session = await getServerSession(authOptions);
-    // if (!session) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     await dbConnect();
 
@@ -74,7 +74,22 @@ export async function POST(request: NextRequest) {
     console.log('API received body:', body); // Debug log
 
     // Validate input
-    const validatedData = CreateDoctorSchema.parse(body);
+    const validationResult = CreateDoctorSchema.safeParse(body);
+    if (!validationResult.success) {
+      console.error('Validation errors:', validationResult.error.errors);
+      return NextResponse.json(
+        {
+          error: 'Invalid data',
+          details: validationResult.error.errors.map((err) => ({
+            field: err.path.join('.'),
+            message: err.message,
+          })),
+        },
+        { status: 400 },
+      );
+    }
+
+    const validatedData = validationResult.data;
     console.log('Validated data:', validatedData); // Debug log
 
     // Check if doctor with same email or license number already exists
@@ -91,7 +106,7 @@ export async function POST(request: NextRequest) {
 
     const doctor = new Doctor({
       ...validatedData,
-      createdBy: '507f1f77bcf86cd799439011', // Mock user ID for testing
+      createdBy: session.user.id,
     });
 
     console.log('About to save doctor:', doctor); // Debug log
@@ -102,9 +117,24 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error creating doctor:', error);
 
-    if (error.name === 'ZodError') {
+    // Handle duplicate key errors
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: `Doctor with this ${field} already exists` },
+        { status: 409 },
+      );
+    }
+
+    // Handle validation errors from Mongoose
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map((err: any) => ({
+        field: err.path,
+        message: err.message,
+      }));
+
+      return NextResponse.json(
+        { error: 'Validation failed', details: validationErrors },
         { status: 400 },
       );
     }

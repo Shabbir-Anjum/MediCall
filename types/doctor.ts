@@ -8,6 +8,7 @@ export const ScheduleTimeSlotSchema = z.object({
 
 export const ScheduleSchema = z.record(z.array(ScheduleTimeSlotSchema));
 
+// API Doctor Schema (for database)
 export const DoctorSchema = z.object({
   name: z.string().min(1, 'Doctor name is required'),
   email: z.string().email('Invalid email address'),
@@ -27,6 +28,30 @@ export const DoctorSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
+// Form Doctor Schema (for form validation)
+export const FormDoctorSchema = z.object({
+  name: z.string().min(1, 'Doctor name is required'),
+  email: z.string().email('Invalid email address'),
+  phoneNumber: z.string().min(10, 'Valid phone number is required'),
+  specialty: z.string().min(1, 'Specialty is required'),
+  department: z.string().min(1, 'Department is required'),
+  licenseNumber: z.string().min(1, 'License number is required'),
+  bio: z.string().optional(),
+  experience: z.string().min(1, 'Experience is required'), // String for form input
+  consultationFee: z.string().optional(), // String for form input
+  qualifications: z.array(z.string()).min(1, 'At least one qualification is required'),
+  availabilitySlots: z
+    .array(
+      z.object({
+        id: z.string(),
+        day: z.string(),
+        startTime: z.string(),
+        endTime: z.string(),
+      }),
+    )
+    .optional(),
+});
+
 export const CreateDoctorSchema = DoctorSchema.omit({
   voiceId: true,
   voiceCloneStatus: true,
@@ -37,6 +62,7 @@ export const UpdateDoctorSchema = DoctorSchema.partial();
 
 // TypeScript types
 export type Doctor = z.infer<typeof DoctorSchema>;
+export type FormDoctor = z.infer<typeof FormDoctorSchema>;
 export type CreateDoctorData = z.infer<typeof CreateDoctorSchema>;
 export type UpdateDoctorData = z.infer<typeof UpdateDoctorSchema>;
 export type ScheduleTimeSlot = z.infer<typeof ScheduleTimeSlotSchema>;

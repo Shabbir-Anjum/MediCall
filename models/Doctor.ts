@@ -34,6 +34,7 @@ const DoctorSchema: Schema = new Schema(
       type: String,
       required: [true, 'Doctor name is required'],
       trim: true,
+      minlength: [2, 'Name must be at least 2 characters long'],
     },
     email: {
       type: String,
@@ -41,11 +42,13 @@ const DoctorSchema: Schema = new Schema(
       unique: true,
       lowercase: true,
       trim: true,
+      match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email address'],
     },
     phoneNumber: {
       type: String,
       required: [true, 'Phone number is required'],
       trim: true,
+      minlength: [10, 'Phone number must be at least 10 digits'],
     },
     specialty: {
       type: String,
@@ -73,42 +76,61 @@ const DoctorSchema: Schema = new Schema(
     },
     availabilityStatus: {
       type: String,
-      enum: ['online', 'offline', 'on-leave'],
+      enum: {
+        values: ['online', 'offline', 'on-leave'],
+        message: 'Availability status must be online, offline, or on-leave',
+      },
       default: 'offline',
     },
     schedule: {
       type: Map,
       of: [
         {
-          start: String,
-          end: String,
-          isAvailable: Boolean,
+          start: {
+            type: String,
+            required: true,
+          },
+          end: {
+            type: String,
+            required: true,
+          },
+          isAvailable: {
+            type: Boolean,
+            default: true,
+          },
         },
       ],
       default: {},
     },
     consultationFee: {
       type: Number,
-      min: 0,
+      min: [0, 'Consultation fee must be non-negative'],
     },
     experience: {
       type: Number,
-      required: true,
-      min: 0,
+      required: [true, 'Experience is required'],
+      min: [0, 'Experience must be non-negative'],
     },
-    qualifications: [
-      {
-        type: String,
-        trim: true,
+    qualifications: {
+      type: [String],
+      required: [true, 'At least one qualification is required'],
+      validate: {
+        validator: function (qualifications: string[]) {
+          return qualifications.length > 0 && qualifications.every((q) => q.trim() !== '');
+        },
+        message: 'At least one qualification is required',
       },
-    ],
+    },
     voiceId: {
       type: String,
       trim: true,
     },
     voiceCloneStatus: {
       type: String,
-      enum: ['pending', 'completed', 'failed'],
+      enum: {
+        values: ['pending', 'completed', 'failed'],
+        message: 'Voice clone status must be pending, completed, or failed',
+      },
     },
     isActive: {
       type: Boolean,
@@ -117,12 +139,43 @@ const DoctorSchema: Schema = new Schema(
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: [true, 'Created by user is required'],
     },
   },
   {
     timestamps: true,
   },
 );
+
+// Add indexes for better query performance
+DoctorSchema.index({ specialty: 1 });
+DoctorSchema.index({ department: 1 });
+DoctorSchema.index({ availabilityStatus: 1 });
+DoctorSchema.index({ isActive: 1 });
+DoctorSchema.index({ createdBy: 1 });
+DoctorSchema.index({ createdAt: -1 });
+
+// Compound index for search functionality
+DoctorSchema.index({
+  name: 'text',
+  specialty: 'text',
+  department: 'text',
+  email: 'text',
+});
+
+// Pre-save middleware to validate qualifications
+DoctorSchema.pre('save', function (next) {
+  const doctor = this as any;
+
+  // Ensure qualifications are not empty
+  if (doctor.qualifications && doctor.qualifications.length > 0) {
+    doctor.qualifications = doctor.qualifications.filter((q: string) => q.trim() !== '');
+    if (doctor.qualifications.length === 0) {
+      return next(new Error('At least one qualification is required'));
+    }
+  }
+
+  next();
+});
 
 export default mongoose.models.Doctor || mongoose.model<IDoctor>('Doctor', DoctorSchema);

@@ -5,6 +5,7 @@ import {
   DoctorsListResponse,
   VoiceCloneRequest,
   VoiceCloneResponse,
+  FormDoctorSchema,
 } from '@/types/doctor';
 
 class DoctorService {
@@ -49,13 +50,49 @@ class DoctorService {
   }
 
   // Create a new doctor
-  async createDoctor(data: CreateDoctorData): Promise<DoctorResponse> {
+  async createDoctor(data: any): Promise<DoctorResponse> {
+    // First validate the form data
+    const validationResult = FormDoctorSchema.safeParse(data);
+    if (!validationResult.success) {
+      throw new Error(
+        `Validation failed: ${validationResult.error.errors.map((e) => e.message).join(', ')}`,
+      );
+    }
+
+    // Transform form data to API format
+    const apiData = {
+      name: data.name.trim(),
+      email: data.email.trim().toLowerCase(),
+      phoneNumber: data.phoneNumber.trim(),
+      specialty: data.specialty.trim(),
+      department: data.department.trim(),
+      licenseNumber: data.licenseNumber.trim(),
+      bio: data.bio?.trim() || '',
+      experience: parseInt(data.experience),
+      consultationFee: data.consultationFee ? parseFloat(data.consultationFee) : undefined,
+      qualifications: data.qualifications.filter((q: string) => q.trim() !== ''),
+      availabilityStatus: 'offline' as const,
+      schedule: {},
+    };
+
+    // Validate numeric fields
+    if (isNaN(apiData.experience) || apiData.experience < 0) {
+      throw new Error('Experience must be a valid positive number');
+    }
+
+    if (
+      apiData.consultationFee !== undefined &&
+      (isNaN(apiData.consultationFee) || apiData.consultationFee < 0)
+    ) {
+      throw new Error('Consultation fee must be a valid non-negative number');
+    }
+
     const response = await fetch(this.baseUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(apiData),
     });
 
     if (!response.ok) {

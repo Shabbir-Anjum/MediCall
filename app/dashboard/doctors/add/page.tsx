@@ -198,39 +198,20 @@ export default function AddDoctorPage() {
         department: formData.department,
         licenseNumber: formData.licenseNumber.trim(),
         bio: formData.bio.trim(),
-        experience: parseInt(formData.experience),
+        experience: formData.experience,
         qualifications: validQualifications,
-        consultationFee: formData.consultationFee
-          ? parseFloat(formData.consultationFee)
-          : undefined,
-        availabilityStatus: 'offline', // Default status
-        schedule: {}, // Empty schedule for now
+        consultationFee: formData.consultationFee || undefined,
+        availabilitySlots: formData.availabilitySlots,
       };
 
       console.log('Doctor data to send:', doctorData); // Debug log
 
-      // Use direct fetch for debugging
-      const response = await fetch('/api/doctors', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(doctorData),
-      });
-
-      console.log('Response status:', response.status);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('API Error:', errorData);
-        throw new Error(errorData.error || 'Failed to create doctor');
-      }
-
-      const newDoctor = await response.json();
+      // Use the doctor service
+      const newDoctor = await doctorService.createDoctor(doctorData);
       console.log('Response from API:', newDoctor); // Debug log
 
       toast.success('Doctor Added Successfully', {
-        description: `Dr. ${newDoctor.doctor.name} has been added to the system.`,
+        description: `Dr. ${newDoctor.name} has been added to the system.`,
       });
 
       router.push('/dashboard/doctors');

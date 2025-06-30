@@ -299,37 +299,6 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Additional sections for scrolling test */}
-        {[...Array(5)].map((_, i) => (
-          <Card key={i}>
-            <CardHeader>
-              <CardTitle>Section {i + 1} - Scroll Test</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 mb-4">
-                This is additional content to test the sticky sidebar and header behavior. As you
-                scroll down, the sidebar and header should remain fixed in place.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium mb-2">Feature {i + 1}</h4>
-                  <p className="text-sm text-gray-600">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-                    incididunt ut labore et dolore magna aliqua.
-                  </p>
-                </div>
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium mb-2">Feature {i + 2}</h4>
-                  <p className="text-sm text-gray-600">
-                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-                    aliquip ex ea commodo consequat.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
       </div>
     </>
   );
