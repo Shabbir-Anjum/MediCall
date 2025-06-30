@@ -114,7 +114,7 @@ export default function HomePage() {
               </>
             ) : (
               <>
-                Streamline Your Hospital's
+                Streamline Your Hospital&apos;s
                 <span className="block text-blue-600">Call Center Operations</span>
               </>
             )}

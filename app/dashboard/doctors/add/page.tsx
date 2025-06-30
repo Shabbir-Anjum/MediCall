@@ -495,7 +495,7 @@ export default function AddDoctorPage() {
                   {formData.availabilitySlots.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
                       <p>No availability slots added yet.</p>
-                      <p className="text-sm">Click "Add Time Slot" to get started.</p>
+                      <p className="text-sm">Click &quot;Add Time Slot&quot; to get started.</p>
                     </div>
                   ) : (
                     formData.availabilitySlots.map((slot) => (

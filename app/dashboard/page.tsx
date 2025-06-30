@@ -98,7 +98,9 @@ export default function DashboardPage() {
         className="mb-8"
       >
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Good morning, Sarah! 👋</h1>
-        <p className="text-gray-600">Here's what's happening in your call center today.</p>
+        <p className="text-gray-600">
+          Here&apos;s what&apos;s happening in your call center today.
+        </p>
       </motion.div>
 
       {/* Stats Grid */}

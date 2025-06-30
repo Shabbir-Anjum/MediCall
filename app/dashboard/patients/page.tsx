@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   Search,
@@ -39,7 +39,7 @@ export default function PatientsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Fetch patients from API
-  const fetchPatients = async () => {
+  const fetchPatients = useCallback(async () => {
     try {
       const params: { status?: string; search?: string } = {};
 
@@ -62,12 +62,12 @@ export default function PatientsPage() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, [searchTerm, statusFilter]);
 
   // Initial load
   useEffect(() => {
     fetchPatients();
-  }, []);
+  }, [fetchPatients]);
 
   // Refresh when filters change
   useEffect(() => {
@@ -75,7 +75,7 @@ export default function PatientsPage() {
       setIsRefreshing(true);
       fetchPatients();
     }
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, statusFilter, fetchPatients, isLoading]);
 
   const handleStatusChange = async (
     patientId: string,

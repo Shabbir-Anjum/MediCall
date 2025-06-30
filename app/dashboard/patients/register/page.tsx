@@ -382,7 +382,7 @@ export default function RegisterPatientPage() {
                     <div className="text-center py-8 text-gray-500">
                       <Clock className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                       <p>No medications added yet</p>
-                      <p className="text-sm">Click "Add Medication" to get started</p>
+                      <p className="text-sm">Click &quot;Add Medication&quot; to get started</p>
                     </div>
                   ) : (
                     formData.medications.map((medication, index) => (
